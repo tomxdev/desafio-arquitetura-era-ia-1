@@ -1,0 +1,20 @@
+{
+  "status": 422,
+  "content_type": "application/json",
+  "body": {
+    "detail": [
+      {
+        "type": "date_from_datetime_parsing",
+        "loc": [
+          "body",
+          "start"
+        ],
+        "msg": "Input should be a valid date or datetime, day value is outside expected range",
+        "input": "2026-02-30",
+        "ctx": {
+          "error": "day value is outside expected range"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "status": 422,
+  "content_type": "application/json",
+  "body": {
+    "detail": [
+      {
+        "type": "missing",
+        "loc": [
+          "body",
+          "ticket_id"
+        ],
+        "msg": "Field required",
+        "input": {
+          "text": "Meu pedido #481516 não chegou"
+        }
+      }
+    ]
+  }
+}

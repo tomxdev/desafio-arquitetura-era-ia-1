@@ -1,0 +1,20 @@
+{
+  "status": 422,
+  "content_type": "application/json",
+  "body": {
+    "detail": [
+      {
+        "type": "json_invalid",
+        "loc": [
+          "body",
+          0
+        ],
+        "msg": "JSON decode error",
+        "input": {},
+        "ctx": {
+          "error": "Expecting value"
+        }
+      }
+    ]
+  }
+}
