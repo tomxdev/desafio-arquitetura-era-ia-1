@@ -30,7 +30,7 @@
 
 | ID | Critério | Fase | Verificação | Evidência | Status |
 |---|---|---|---|---|---|
-| AC-PLAN-01 | `docs/refactoring-plan.md` contém componentes-alvo, estratégia de cada um, critério de pronto, piloto com medição antes e depois, ≥1 revisão justificada e o registro do handoff para o agente | F04, F05 | revisão por checklist das 6 partes | `docs/refactoring-plan.md`, `docs/evidence/f04/pilot-*.csv`, `docs/evidence/f05/handoff-log.md` | pending |
+| AC-PLAN-01 | `docs/refactoring-plan.md` contém componentes-alvo, estratégia de cada um, critério de pronto, piloto com medição antes e depois, ≥1 revisão justificada e o registro do handoff para o agente | F04, F05 | revisão por checklist das 6 partes | `docs/refactoring-plan.md`, `docs/evidence/f04/pilot-*.csv`, `docs/evidence/f05/handoff-log.md` | in_progress (alvos, estratégia, critério, piloto, revisão e protocolo de handoff na F04; registro do handoff na F05) |
 | AC-PLAN-02 | A tag `v2-decoupled` existe, e nela a aplicação já chama os modelos exclusivamente pelo gateway | F05 | S (checkout da tag): greps de AC-GW-01/02; `/admin/calls` após F1 mostra a chamada; `docker compose logs gateway` registra a requisição; o app não tem URL do provider (`! grep -rn "provider-fake" app/`) | `docs/evidence/f05/{greps.txt,admin-calls.json}` | pending |
 
 ### 1.4 Gateway
@@ -88,7 +88,7 @@
 | RQ-2.3 | Na `main`, a suíte pode ser atualizada para o novo contrato (F2/F3) | F07 | pytest na main | `tests/characterization/`, `tests/contract/` | pending |
 | RQ-3.1 | Script em `metrics/` recebe o caminho do código a medir | F03 | CLI `python metrics/coupling.py <path> --name <v>` | `metrics/coupling.py` | done |
 | RQ-3.2 | O script nasce **depois** da tag v1 (mede a tag via worktree) | F03 | S: `git log --diff-filter=A --format=%H -- metrics/coupling.py` não é ancestral de `v1-coupled` (`! git merge-base --is-ancestor <sha> v1-coupled`) | `docs/evidence/f03/reproducibility.txt` | done |
-| RQ-4.1 | Piloto em um único componente antes de escalar, com medição antes/depois | F04 | plano + CSVs | `docs/evidence/f04/` | pending |
+| RQ-4.1 | Piloto em um único componente antes de escalar, com medição antes/depois | F04 | plano + CSVs | `docs/evidence/f04/` | done |
 | RQ-4.2 | Refatoração feita com agente de IA; métrica e testes como juízes | F05 | log de handoff | `docs/evidence/f05/handoff-log.md` | pending |
 | RQ-4.3 | Na v2, um modelo `large` por trás de cada capacidade; mesmas rotas e modos | F05 | `gateway/config.yaml` na tag; suíte verde | `docs/evidence/f05/` | pending |
 | RQ-5.1 | Gateway como serviço `gateway`, config versionada em `gateway/` | F05 | `docker compose config --services`; `ls gateway/` | `compose.yaml`, `gateway/` | pending |
@@ -139,7 +139,7 @@
 | ST-05 | `gateway/` com capacidades, fallback, chaves, orçamentos e limites | F05, F06 | revisão de `gateway/config.yaml` + seed | `gateway/` | pending |
 | ST-06 | `tests/characterization/` | F02 | existe e passa | `tests/characterization/` | done |
 | ST-07 | `metrics/` com script e `results/` das três versões | F03, F05, F08 | AC-MET-01 | `metrics/` | in_progress (script + v1) |
-| ST-08 | `docs/refactoring-plan.md` | F04, F05 | AC-PLAN-01 | `docs/refactoring-plan.md` | pending |
+| ST-08 | `docs/refactoring-plan.md` | F04, F05 | AC-PLAN-01 | `docs/refactoring-plan.md` | in_progress (F04; handoff na F05) |
 | ST-09 | `docs/adr/` (um arquivo por decisão) | F05–F08 | AC-ADR-01 | `docs/adr/` | pending |
 | ST-10 | Arquivos extras (Dockerfiles, scripts, testes da main, serviços) declarados no compose e no README | F08 | revisão do README "Como rodar" | `README.md` | pending |
 | ST-11 | Tags marcam estados reais: v1 = app recebido + suíte; v2 = refatorado atrás do gateway com mesmo comportamento | F02, F05 | AC-DIAG-02/03/04, AC-PLAN-02 | `docs/evidence/f02/`, `docs/evidence/f05/` | pending |
