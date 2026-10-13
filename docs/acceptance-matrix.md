@@ -12,7 +12,7 @@
 | ID | Critério | Fase | Verificação | Evidência | Status |
 |---|---|---|---|---|---|
 | AC-DIAG-01 | A seção "Diagnóstico da v1" do README registra as quatro dores, cada uma com o comando executado, o resultado observado e o trecho de `app/` onde está a causa | F01 (final em F08) | revisão: 4 subseções × {comando, observado com status/tempo/`/admin/calls`, `app/helpdesk/<arq>.py:<linha>`}; `grep -n "Diagnóstico da v1" README.md` | `README.md`, `docs/evidence/f01/pain{1..4}-*.txt` | done |
-| AC-DIAG-02 | A tag `v1-coupled` existe no fork, e nela `app/` é idêntico ao do repositório base | F02 | S: `git ls-remote --tags origin \| grep v1-coupled` e `git diff --quiet upstream/main v1-coupled -- app/ && echo OK` | `docs/evidence/f02/release-v1-checks.txt`, `docs/evidence/f09/tags.txt` | pending |
+| AC-DIAG-02 | A tag `v1-coupled` existe no fork, e nela `app/` é idêntico ao do repositório base | F02 | S: `git ls-remote --tags origin \| grep v1-coupled` e `git diff --quiet upstream/main v1-coupled -- app/ && echo OK` | `docs/evidence/f02/release-v1-checks.txt`, `docs/evidence/f02/tags.txt` | done |
 | AC-DIAG-03 | A suíte fixa o corpo das respostas das 4 features (não só o status), roda com o comando documentado e passa na `v1-coupled` e na `v2-decoupled` | F02, F05 | S: checkout de cada tag → `docker compose down -v && docker compose up -d --build --wait && python -m pytest tests/characterization -q`; revisão: asserts de corpo inteiro (golden) nas 4 features | `docs/evidence/f02/pytest-v1.txt`, `docs/evidence/f05/pytest-v2.txt` | in_progress (v1: 17/17; v2 na F05) |
 | AC-DIAG-04 | `git diff v1-coupled v2-decoupled -- tests/characterization/` não mostra diferença | F05 | S: `git diff --exit-code v1-coupled v2-decoupled -- tests/characterization/` | `docs/evidence/f05/release-v2-checks.txt` | pending |
 
@@ -21,7 +21,7 @@
 | ID | Critério | Fase | Verificação | Evidência | Status |
 |---|---|---|---|---|---|
 | AC-MET-01 | `metrics/results/` contém, para `v1-coupled`, `v2-decoupled` e `main`, CSV com cabeçalho `component,ca,ce,i,a,d` e gráfico A × I com a Main Sequence | F03 (v1), F05 (v2), F08 (main) | S: `for v in v1-coupled v2-decoupled main; do head -1 metrics/results/$v.csv \| grep -qx 'component,ca,ce,i,a,d' && test -f metrics/results/$v.png && echo $v OK; done`; revisão visual: reta A+I=1 | `metrics/results/*.csv`, `*.png` | pending |
-| AC-MET-02 | Rodar o script da `main` sobre um checkout da `v1-coupled` reproduz o CSV versionado | F03, F09 | S: `git worktree add ../v1 v1-coupled && python metrics/coupling.py ../v1/app/helpdesk --name chk --out-dir /tmp/chk && diff /tmp/chk/chk.csv metrics/results/v1-coupled.csv` | `docs/evidence/f09/metric-repro.txt` | pending |
+| AC-MET-02 | Rodar o script da `main` sobre um checkout da `v1-coupled` reproduz o CSV versionado | F03, F09 | S: `git worktree add ../v1 v1-coupled && python metrics/coupling.py ../v1/app/helpdesk --name chk --out-dir /tmp/chk && diff /tmp/chk/chk.csv metrics/results/v1-coupled.csv; git worktree remove ../v1` | `docs/evidence/f09/metric-repro.txt` | pending |
 | AC-MET-03 | Os CSVs seguem a régua do req. 3, e a medição da `v1-coupled` bate com a recalculada pelo avaliador | F03 | `pytest metrics/tests -q` (inclui o teste de oráculo da tabela 1.1 do plano); conferência manual de 3 módulos | `docs/evidence/f03/{pytest-metrics.txt,manual-check.md}` | pending |
 | AC-MET-04 | Na `main`, nenhum componente na zona de dor (A<0,5, I<0,5 e D≥0,5), exceto os declarados no ADR da métrica como estáveis por natureza, com justificativa; o componente que chama o gateway e as features não podem ser exceção | F08 | S: script de zona de dor (F08, ação 2) × lista do ADR 0008 | `docs/evidence/f08/pain-zone-check.txt`, `docs/adr/0008-*.md` | pending |
 | AC-MET-05 | Na `main`, o código que chama o gateway fica em um único componente de `app/`, identificado no README; nenhuma feature o importa; só o ponto de composição depende dele | F05, F08 | S: `grep -rlnE "^(import\|from) (openai\|httpx\|anthropic\|requests)" app/helpdesk` → só `adapters/gateway.py`; `grep -rnE "adapters(\.gateway\| import gateway)" app/helpdesk \| grep -v main.py` → vazio; métrica: Ca do adaptador = {main}; README cita o componente | `docs/evidence/f08/gateway-client-check.txt` | pending |
@@ -71,7 +71,7 @@
 |---|---|---|---|---|---|
 | AC-RDM-01 | O README contém todas as seções listadas em Entregável | F08 | S: loop das 10 seções (F08, seção 8) | `docs/evidence/f08/readme-sections.txt` | pending |
 | AC-RDM-02 | `cp .env.example .env && docker compose up -d --build --wait` na `main` sobe tudo, e `curl -s localhost:8000/health` logo em seguida retorna 200, sem passos manuais | F09 | S: clone limpo da `main` | `docs/evidence/f09/fresh-clone.log` | pending |
-| AC-RDM-03 | `provider-fake/`, `edge/` e `data/` não foram alterados | todas (CI `static`), F09 | S: `git diff --quiet upstream/main main -- provider-fake/ edge/ data/` | `docs/evidence/f09/matrix-run.md` | pending |
+| AC-RDM-03 | `provider-fake/`, `edge/` e `data/` não foram alterados | todas (CI `static`), F09 | S: `git remote add upstream https://github.com/devfullcycle/desafio-arquitetura-era-ia-1.git; git fetch -q upstream main && git fetch -q origin && git diff --quiet upstream/main origin/main -- provider-fake/ edge/ data/` (num clone limpo, `upstream` e `main` local não existem) | `docs/evidence/f09/matrix-run.md` | pending |
 | AC-RDM-04 | Todo serviço do compose além de `provider-fake`, `edge`, `app` e `gateway` tem um ADR que o justifica a partir de um requisito | F05, F08 | S: `docker compose config --services` × ADRs (ex.: `gateway-db` → ADR 0003; `gateway-init` → ADR 0010, se existir) | `docs/evidence/f08/services-vs-adr.txt` | pending |
 
 ## 2. Requisitos (tarefas que não aparecem literalmente nos critérios)
@@ -124,7 +124,7 @@
 | ID | Item | Fase | Verificação | Evidência | Status |
 |---|---|---|---|---|---|
 | TC-01 | Docker e Docker Compose v2 | F00 | `docker compose version` | `docs/evidence/f00/host-versions.txt` | done |
-| TC-02 | Git, com as tags publicadas no fork | F02, F05, F09 | `git ls-remote --tags origin` | `docs/evidence/f09/tags.txt` | pending |
+| TC-02 | Git, com as tags publicadas no fork | F02, F05, F09 | `git ls-remote --tags origin` | `docs/evidence/f09/tags.txt` | in_progress (v1-coupled publicada; v2 na F05) |
 | TC-03 | AI Gateway self-hosted como serviço `gateway` (não SaaS) | F05 | `docker compose config --services` contém `gateway`; imagem pública | `compose.yaml` | pending |
 | TC-04 | App em Python 3.12 com FastAPI | F05–F09 | `docker compose exec app python --version`; `pip show fastapi` | `docs/evidence/f09/matrix-run.md` | pending |
 

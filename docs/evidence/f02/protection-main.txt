@@ -1,0 +1,1 @@
+{"approvals":0,"checks":["static","e2e"],"deletions":false,"enforce_admins":true,"force_push":false}
