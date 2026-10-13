@@ -355,7 +355,7 @@ gh api -X POST repos/tomxdev/desafio-arquitetura-era-ia-1/rulesets --input .gith
 | Fase | Objetivo | Branch | PR alvo | Depende de | Entregáveis | Testes/gate principal | Marco | Status |
 |---|---|---|---|---|---|---|---|---|
 | F00 | Bootstrap, fork, CI, ambiente | feature/00-bootstrap | develop | — | fork, remotes, develop, docs do plano, CI, venv | compose sobe; `/health` 200; CI verde | — | done |
-| F01 | Diagnóstico v1 | feature/01-diagnostico-v1 | develop | F00 | README "Diagnóstico da v1", `docs/evidence/f01/` | 4 dores reproduzidas; `app/` = upstream | — | pending |
+| F01 | Diagnóstico v1 | feature/01-diagnostico-v1 | develop | F00 | README "Diagnóstico da v1", `docs/evidence/f01/` | 4 dores reproduzidas; `app/` = upstream | — | done |
 | F02 | Caracterização + v1 | feature/02-caracterizacao → release/v1-coupled | develop → main | F01 | `tests/characterization/`, tag | suíte verde na v1; `app/` idêntico | **v1-coupled** | pending |
 | F03 | Métrica | feature/03-metrica | develop | v1 publicada | `metrics/` + `results/v1-coupled.{csv,png}` | v1.csv = oráculo 1.1; unit tests | — | pending |
 | F04 | Plano + piloto | feature/04-plano-piloto | develop | F03 | `docs/refactoring-plan.md`, piloto | suíte verde; métrica antes/depois | — | pending |
@@ -1156,7 +1156,7 @@ git clean -ndx          # revisar antes de usar -fdx; nunca apagar .env sem quer
 | Fase | Status | Branch | PR (URL) | Merge SHA | Evidência | Observações |
 |---|---|---|---|---|---|---|
 | F00 | done | feature/00-bootstrap | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/1 | 5603bf0 | docs/evidence/f00/ | CI static+e2e verdes; proteção develop + ruleset de tags `v*` (id 25008762) aplicados |
-| F01 | in_progress | feature/01-diagnostico-v1 | — | — | docs/evidence/f01/ | 4 dores + large×mini reproduzidas; PR pendente |
+| F01 | done | feature/01-diagnostico-v1 | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/2 | 7ef9b19 | docs/evidence/f01/ | 4 dores + large×mini; CI verde; `app/` = upstream |
 | F02 | pending | feature/02-caracterizacao | — | — | docs/evidence/f02/ | |
 | F02-REL | pending | release/v1-coupled | — | — | tag `v1-coupled`: — | confirmação humana |
 | F03 | pending | feature/03-metrica | — | — | metrics/results/v1-coupled.* | |
