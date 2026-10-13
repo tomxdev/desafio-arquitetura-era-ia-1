@@ -1162,7 +1162,7 @@ git clean -ndx          # revisar antes de usar -fdx; nunca apagar .env sem quer
 | F02-REL | done | release/v1-coupled | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/4 (back-merge #5) | fae6db4 | tag `v1-coupled` → fae6db4 (anotada 4664689) | confirmado pelo usuário; proteção da main aplicada |
 | F03 | done | feature/03-metrica | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/6 | 5c432ea | metrics/results/v1-coupled.*, docs/evidence/f03/ | v1 = oráculo; 12 testes; inclui correções do review do PR #4 |
 | F04 | done | feature/04-plano-piloto | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/7 | 36e1c17 | docs/evidence/f04/ | piloto em classification: 17/17; revisão 1 registrada |
-| F05 | pending | feature/05-gateway-v2 | — | — | docs/evidence/f05/ | |
+| F05 | in_progress | feature/05-gateway-v2 | — | — | docs/evidence/f05/ | gateway + refatoração via agente (5 alvos, 0 rejeições); juízes independentes 4/4 |
 | F05-REL | pending | release/v2-decoupled | — | — | tag `v2-decoupled`: — | confirmação humana |
 | F06 | pending | feature/06-governanca-resiliencia | — | — | docs/evidence/f06/ | |
 | F07 | pending | feature/07-fluxos | — | — | docs/evidence/f07/ | |
@@ -1177,8 +1177,8 @@ git clean -ndx          # revisar antes de usar -fdx; nunca apagar .env sem quer
 
 | ID | Decisão | Fase | Como resolver | Status |
 |---|---|---|---|---|
-| D1 | Semear a virtual key: entrypoint do gateway (a) vs. serviço `gateway-init` (b) | F05 | testar (a) com `up --wait`; se inviável, (b) + ADR | pending |
-| D2 | `/key/generate` aceita `key` fixo na versão pinada? | F05 | chamada de teste | pending |
+| D1 | Semear a virtual key: entrypoint do gateway (a) vs. serviço `gateway-init` (b) | F05 | testar (a) com `up --wait`; se inviável, (b) + ADR | **resolvida: (a)**. `gateway/entrypoint.sh` + `seed_keys.py`; healthcheck só passa com a chave criada; `up --wait` do zero em ~33 s (ADR 0003) |
+| D2 | `/key/generate` aceita `key` fixo na versão pinada? | F05 | chamada de teste | **resolvida: sim** (`v1.102.1` cria `sk-helpdesk-app-0001` como pedido) |
 | D3 | Campos de preço por token no `model_list` da versão pinada | F06 | `spend > 0` em `/key/info` | pending |
 | D4 | Mini como último recurso em F1, F2, F3 (F4: não, por hipótese) | F06 | `docs/evidence/f01/models-compare/summary.md`: classify e topics idênticos ao large na amostra; extract erra 9/40 (4 com nota fiscal como pedido, formato válido); suggest ~44% do tamanho | evidência pronta (decisão na F06) |
 | D5 | Valores de timeout por capacidade e `num_retries` | F06 | medições + limites de 3 s / 15 s / 60 s | pending |
@@ -1193,7 +1193,7 @@ git clean -ndx          # revisar antes de usar -fdx; nunca apagar .env sem quer
 | ID | Risco | Prob. | Impacto | Mitigação |
 |---|---|---|---|---|
 | R1 | Tag publicada num commit que não cumpre o marco | baixa | **alto** (tag imutável) | gates de marco + confirmação humana antes da tag |
-| R2 | Tradução Anthropic↔OpenAI no gateway altera a saída e quebra a suíte na v2 | média | alto | comparar crus; endpoint nativo no adaptador se preciso |
+| R2 | Tradução Anthropic↔OpenAI no gateway altera a saída e quebra a suíte na v2 (**não ocorreu**: saída e tokens idênticos, F05) | média | alto | comparar crus; endpoint nativo no adaptador se preciso |
 | R3 | Buffer de SSE na cadeia (gateway/uvicorn/nginx) | média | alto | `X-Accel-Buffering: no`; teste peça por peça |
 | R4 | Retries multiplicados (gateway × fallback × SDK) | média | médio | `max_retries=0` no app; contar no `/admin/calls` |
 | R5 | Spend do LiteLLM com atraso → orçamento não estoura na hora | média | médio | roteiro com margem; fallback no app + ADR |

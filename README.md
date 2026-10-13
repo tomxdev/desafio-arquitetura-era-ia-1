@@ -2,11 +2,11 @@
 
 Entrega do desafio [Da integração frágil à arquitetura resiliente](https://github.com/devfullcycle/desafio-arquitetura-era-ia-1) (o enunciado completo continua no `README.md` do repositório base). O plano de execução e a rastreabilidade dos critérios estão em [`docs/implementation-master-plan.md`](docs/implementation-master-plan.md) e [`docs/acceptance-matrix.md`](docs/acceptance-matrix.md).
 
-> **Estado atual: v1 (aplicação recebida, sem alterações em `app/`).** As seções marcadas como *em construção* são preenchidas nas fases seguintes do plano.
+> **Estado atual: v2 (`app/` refatorado atrás do AI Gateway, mesmo comportamento externo da v1).** As seções marcadas como *em construção* são preenchidas nas fases seguintes do plano. O diagnóstico abaixo descreve a v1 (`v1-coupled`).
 
 ## Visão geral
 
-*Em construção (F08).* Hoje o `app/` é exatamente o do repositório base: cada feature chama o SDK do provider direto, com nome de modelo e chave no código, tudo de forma síncrona. Quando um provider cai, as features presas a ele param, e só elas: F1/F4 dependem do `openai`, e F2/F3 do `anthropic` (ver dor 3).
+*Em construção (F08).* A aplicação (FastAPI, `app/helpdesk/`) não conhece provider, modelo físico nem chave de provider: cada feature pede uma **capacidade lógica** (`helpdesk-classify`, `helpdesk-suggest`, `helpdesk-topics`, `helpdesk-extract`) por uma porta (`ports.LLMGateway`), e o único componente que fala com o modelo, `adapters/gateway.py` (`GatewayClient`, SDK `openai`), chama o **AI Gateway** (serviço `gateway`, LiteLLM Proxy, [ADR 0001](docs/adr/0001-adotar-litellm-proxy-como-ai-gateway.md)) com uma chave virtual própria. O gateway mapeia cada capacidade para um modelo físico ([ADR 0002](docs/adr/0002-expor-capacidades-logicas-por-feature.md)) e guarda as chaves virtuais e o gasto no `gateway-db` ([ADR 0003](docs/adr/0003-persistir-chaves-e-gasto-no-postgres-do-gateway.md)). Resiliência (timeout, retry, fallback entre providers) e governança entram na próxima etapa; nesta versão, com um provider fora, a feature presa a ele ainda falha (como na v1).
 
 ## Diagnóstico da v1
 
@@ -118,6 +118,8 @@ docker compose up -d --build --wait
 curl -s localhost:8000/health
 ```
 
+Serviços: `edge` (borda, `localhost:8000`), `app` (helpdesk), `gateway` (LiteLLM, `localhost:4000`), `gateway-db` (Postgres do gateway) e `provider-fake` (`localhost:8090`). A chave virtual do app é criada na subida, sem passo manual; o `--wait` só retorna quando ela já existe.
+
 Diagnóstico da v1 (exige o compose no ar; Git Bash ou bash):
 
 ```bash
@@ -152,7 +154,7 @@ python -m pytest metrics/tests -q                             # testes do script
 
 ## Métrica
 
-Script: [`metrics/coupling.py`](metrics/coupling.py); régua e interpretações no [ADR 0008](docs/adr/0008-medir-acoplamento-pela-regua-fixa.md). *Leitura de v2 e main: em construção (F05/F08).*
+Script: [`metrics/coupling.py`](metrics/coupling.py); régua e interpretações no [ADR 0008](docs/adr/0008-medir-acoplamento-pela-regua-fixa.md). Plano, piloto, revisão e handoff da refatoração em [`docs/refactoring-plan.md`](docs/refactoring-plan.md). *Leitura da main: em construção (F08).*
 
 ### v1-coupled
 
@@ -164,9 +166,30 @@ Script: [`metrics/coupling.py`](metrics/coupling.py); régua e interpretações 
 - **Features** (`classification`, `suggestion`, `extraction`: I 0,75; `report`: I 0,80) e `main` (I 1,00) ficam perto da Main Sequence só por serem instáveis: dependem diretamente de `llm` e `config` concretos.
 - `tickets` (I 0,50, D 0,50) fica na borda da zona, sem estar nela (I não é < 0,5).
 
+### v2-decoupled
+
+![A × I da v2-decoupled](metrics/results/v2-decoupled.png)
+
+[`metrics/results/v2-decoupled.csv`](metrics/results/v2-decoupled.csv):
+
+- **`config` e `llm` saíram** (dissolvidos): os nomes físicos e as chaves foram para o gateway; o que sobrou de configuração (URL e chave do gateway, timeout, arquivo de tickets) é lido no ponto de composição (`main`).
+- **`ports`** (A 1,00, I 0,00, D 0,00) entrou exatamente na Main Sequence: é a abstração estável da qual as features e os adaptadores dependem (Ca 6).
+- **Features** (I 0,67): dependem só de `ports` e `schemas`; nenhuma importa o cliente do gateway.
+- **`adapters.gateway`** (o único cliente do modelo) e **`tickets`**: concretos, importados só por `main`, implementam a porta (I 0,50, D 0,50), fora da zona de dor.
+- **`schemas`** continua em D 1,00: são os tipos de valor do contrato HTTP, que a suíte de caracterização congela; é a exceção "estável por natureza" proposta no ADR 0008.
+
 ## Tabela de capacidades
 
-*Em construção (F05/F06).*
+*Preliminar (v2): fallback técnico, política com modelo fraco e tentativas por destino entram na F06.*
+
+| Capacidade lógica | Feature | Modelo primário | Fallback técnico | Modelo fraco | Máx. tentativas por destino |
+|---|---|---|---|---|---|
+| `helpdesk-classify` | F1 | `openai/gpt-fake-large` | — (F06) | — (F06) | 1 |
+| `helpdesk-suggest` | F2 | `anthropic/claude-fake-large` | — (F06) | — (F06) | 1 |
+| `helpdesk-topics` | F3 | `anthropic/claude-fake-large` | — (F06) | — (F06) | 1 por lote |
+| `helpdesk-extract` | F4 | `openai/gpt-fake-large` | — (F06) | — (F06) | 1 |
+
+Componente que chama o gateway: [`app/helpdesk/adapters/gateway.py`](app/helpdesk/adapters/gateway.py) (`GatewayClient`, `max_retries=0`, timeout de 60 s por chamada), montado só em [`app/helpdesk/main.py`](app/helpdesk/main.py).
 
 ## Tabela de fallback
 
