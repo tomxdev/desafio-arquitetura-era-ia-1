@@ -38,6 +38,8 @@ class ProviderGateway:
     """
 
     def complete(self, capability: str, task: str, content: str) -> str:
-        if capability == "classification":
+        if capability == "helpdesk-classify":
             return call_openai(config.CLASSIFICATION_MODEL, task, content)
+        if capability == "helpdesk-suggest":
+            return call_anthropic(config.SUGGESTION_MODEL, task, content)
         raise ValueError(f"Capacidade desconhecida: {capability}")

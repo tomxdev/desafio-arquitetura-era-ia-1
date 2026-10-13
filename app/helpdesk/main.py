@@ -20,7 +20,7 @@ def classify_ticket(ticket: TicketInput) -> Classification:
 
 @app.post("/tickets/reply-suggestion")
 def suggest_reply(ticket: TicketInput) -> ReplySuggestion:
-    return suggestion.suggest(ticket)
+    return suggestion.suggest(ticket, gateway)
 
 
 @app.post("/tickets/extraction")

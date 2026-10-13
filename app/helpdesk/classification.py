@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from .ports import LLMGateway
 from .schemas import Classification, TicketInput
 
-CAPABILITY = "classification"
+CAPABILITY = "helpdesk-classify"
 CATEGORIES = {"delivery", "payment", "exchange_return", "product_defect", "other"}
 PRIORITIES = {"low", "medium", "high"}
 
