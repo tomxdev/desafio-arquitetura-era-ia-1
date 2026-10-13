@@ -28,3 +28,16 @@ def call_anthropic(model: str, task: str, content: str) -> str:
 
 def parse_json(text: str) -> dict:
     return json.loads(text)
+
+
+class ProviderGateway:
+    """Implementação provisória de ports.LLMGateway sobre os SDKs (piloto da F04).
+
+    Mapeia a capacidade lógica para o provider e o modelo que a v1 usava; a F05 troca por um cliente
+    do AI Gateway.
+    """
+
+    def complete(self, capability: str, task: str, content: str) -> str:
+        if capability == "classification":
+            return call_openai(config.CLASSIFICATION_MODEL, task, content)
+        raise ValueError(f"Capacidade desconhecida: {capability}")
