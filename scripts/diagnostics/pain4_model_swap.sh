@@ -3,6 +3,11 @@
 # Altera app/ TEMPORARIAMENTE e restaura no fim (git checkout -- app/ + rebuild).
 set -u
 cd "$(dirname "$0")/../.."
+# O passo 4 restaura app/ com `git checkout -- app/`: com alterações locais em app/, elas seriam perdidas.
+if ! git diff --quiet -- app/ || ! git diff --cached --quiet -- app/ || [ -n "$(git ls-files --others --exclude-standard -- app/)" ]; then
+  echo "app/ tem alterações locais; faça commit ou stash antes de rodar este roteiro." >&2
+  exit 1
+fi
 E=docs/evidence/f01
 F1() { curl -s -o /dev/null -X POST localhost:8000/tickets/classification -H "Content-Type: application/json" --data-binary @scripts/diagnostics/payloads/ticket-tk-00042.json -w 'F1 status=%{http_code}\n'; }
 last_model() { curl -s "localhost:8090/admin/calls?last=1" | python -c "import sys,json;c=json.load(sys.stdin)[0];print('  /admin/calls ->',c['provider'],c['model'],c['task'])"; }

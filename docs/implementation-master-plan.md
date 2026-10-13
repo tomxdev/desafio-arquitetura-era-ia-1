@@ -356,9 +356,9 @@ gh api -X POST repos/tomxdev/desafio-arquitetura-era-ia-1/rulesets --input .gith
 |---|---|---|---|---|---|---|---|---|
 | F00 | Bootstrap, fork, CI, ambiente | feature/00-bootstrap | develop | — | fork, remotes, develop, docs do plano, CI, venv | compose sobe; `/health` 200; CI verde | — | done |
 | F01 | Diagnóstico v1 | feature/01-diagnostico-v1 | develop | F00 | README "Diagnóstico da v1", `docs/evidence/f01/` | 4 dores reproduzidas; `app/` = upstream | — | done |
-| F02 | Caracterização + v1 | feature/02-caracterizacao → release/v1-coupled | develop → main | F01 | `tests/characterization/`, tag | suíte verde na v1; `app/` idêntico | **v1-coupled** | pending |
-| F03 | Métrica | feature/03-metrica | develop | v1 publicada | `metrics/` + `results/v1-coupled.{csv,png}` | v1.csv = oráculo 1.1; unit tests | — | pending |
-| F04 | Plano + piloto | feature/04-plano-piloto | develop | F03 | `docs/refactoring-plan.md`, piloto | suíte verde; métrica antes/depois | — | pending |
+| F02 | Caracterização + v1 | feature/02-caracterizacao → release/v1-coupled | develop → main | F01 | `tests/characterization/`, tag | suíte verde na v1; `app/` idêntico | **v1-coupled** | done |
+| F03 | Métrica | feature/03-metrica | develop | v1 publicada | `metrics/` + `results/v1-coupled.{csv,png}` | v1.csv = oráculo 1.1; unit tests | — | done |
+| F04 | Plano + piloto | feature/04-plano-piloto | develop | F03 | `docs/refactoring-plan.md`, piloto | suíte verde; métrica antes/depois | — | done |
 | F05 | Gateway + v2 | feature/05-gateway-v2 → release/v2-decoupled | develop → main | F04 | `gateway/`, compose, app refatorado, `results/v2-decoupled.*` | suíte **inalterada** verde; greps; env do app | **v2-decoupled** | pending |
 | F06 | Governança e resiliência | feature/06-governanca-resiliencia | develop | v2 publicada | budget, rpm, timeout, retry, fallback, troca de modelo | roteiros provados em `/admin/calls` | — | pending |
 | F07 | Fluxos F1–F4 | feature/07-fluxos | develop | F06 | sync/SSE/async, testes da main | tempos pela borda; sem 504 | — | pending |
@@ -652,8 +652,8 @@ Atualize a seção 7 e a matriz, reporte as URLs reais e PARE.
 ```bash
 python -m pytest metrics/tests -q
 head -1 metrics/results/v1-coupled.csv | grep -qx 'component,ca,ce,i,a,d'
-# reprodutibilidade:
-python metrics/coupling.py ../v1/app/helpdesk --name tmp --out-dir /tmp/m && diff /tmp/m/tmp.csv metrics/results/v1-coupled.csv
+# reprodutibilidade (recria o worktree, removido na ação 4):
+git worktree add ../v1 v1-coupled && python metrics/coupling.py ../v1/app/helpdesk --name tmp --out-dir /tmp/m && diff /tmp/m/tmp.csv metrics/results/v1-coupled.csv; git worktree remove ../v1
 ```
 
 **9. Evidências.** `metrics/results/v1-coupled.{csv,png}`, `docs/evidence/f03/{pytest-metrics.txt, manual-check.md}`.
@@ -1074,6 +1074,7 @@ Complete o README com as 10 seções obrigatórias. Não mude comportamento. PR 
    ```bash
    docker compose -p desafio down -v 2>/dev/null; cd "$(mktemp -d)"
    git clone --branch release/final https://github.com/tomxdev/desafio-arquitetura-era-ia-1.git fresh && cd fresh
+   git remote add upstream https://github.com/devfullcycle/desafio-arquitetura-era-ia-1.git && git fetch -q upstream main   # o clone limpo não tem upstream/main
    cp .env.example .env && docker compose up -d --build --wait && curl -s -o /dev/null -w '%{http_code}\n' localhost:8000/health
    ```
    (Antes, parar o compose do repo de trabalho para liberar as portas.)
@@ -1092,7 +1093,7 @@ Complete o README com as 10 seções obrigatórias. Não mude comportamento. PR 
 ```bash
 python -m pytest tests/characterization tests/contract -q
 bash scripts/verify/governance.sh && bash scripts/verify/fallback.sh && bash scripts/verify/model_swap.sh && bash scripts/verify/flows.sh
-git diff --quiet upstream/main main -- provider-fake/ edge/ data/
+git fetch -q origin && git diff --quiet upstream/main origin/main -- provider-fake/ edge/ data/   # num clone limpo não há `main` local
 ```
 
 **9. Evidências.** `docs/evidence/f09/{fresh-clone.log, matrix-run.md, tags.txt, prs.json, repo-visibility.txt}`.
@@ -1158,11 +1159,11 @@ git clean -ndx          # revisar antes de usar -fdx; nunca apagar .env sem quer
 | F00 | done | feature/00-bootstrap | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/1 | 5603bf0 | docs/evidence/f00/ | CI static+e2e verdes; proteção develop + ruleset de tags `v*` (id 25008762) aplicados |
 | F01 | done | feature/01-diagnostico-v1 | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/2 | 7ef9b19 | docs/evidence/f01/ | 4 dores + large×mini; CI verde; `app/` = upstream |
 | F02 | done | feature/02-caracterizacao | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/3 | de5f588 | docs/evidence/f02/ | suíte 17/17 2× local + CI |
-| F02-REL | in_progress | release/v1-coupled | (PR para main aberto, aguardando confirmação) | — | tag `v1-coupled`: — | confirmação humana |
-| F03 | pending | feature/03-metrica | — | — | metrics/results/v1-coupled.* | |
-| F04 | pending | feature/04-plano-piloto | — | — | docs/evidence/f04/ | |
-| F05 | pending | feature/05-gateway-v2 | — | — | docs/evidence/f05/ | |
-| F05-REL | pending | release/v2-decoupled | — | — | tag `v2-decoupled`: — | confirmação humana |
+| F02-REL | done | release/v1-coupled | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/4 (back-merge #5) | fae6db4 | tag `v1-coupled` → fae6db4 (anotada 4664689) | confirmado pelo usuário; proteção da main aplicada |
+| F03 | done | feature/03-metrica | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/6 | 5c432ea | metrics/results/v1-coupled.*, docs/evidence/f03/ | v1 = oráculo; 12 testes; inclui correções do review do PR #4 |
+| F04 | done | feature/04-plano-piloto | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/7 | 36e1c17 | docs/evidence/f04/ | piloto em classification: 17/17; revisão 1 registrada |
+| F05 | done | feature/05-gateway-v2 | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/8 | 05e9400 | docs/evidence/f05/ | gateway + refatoração via agente (5 alvos, 0 rejeições); juízes independentes 4/4; corrigido bug do `! grep` no CI |
+| F05-REL | in_progress | release/v2-decoupled | (PR para main aberto, aguardando confirmação) | — | tag `v2-decoupled`: — | confirmação humana |
 | F06 | pending | feature/06-governanca-resiliencia | — | — | docs/evidence/f06/ | |
 | F07 | pending | feature/07-fluxos | — | — | docs/evidence/f07/ | |
 | F08 | pending | feature/08-adrs-docs | — | — | docs/evidence/f08/ | |
@@ -1176,29 +1177,30 @@ git clean -ndx          # revisar antes de usar -fdx; nunca apagar .env sem quer
 
 | ID | Decisão | Fase | Como resolver | Status |
 |---|---|---|---|---|
-| D1 | Semear a virtual key: entrypoint do gateway (a) vs. serviço `gateway-init` (b) | F05 | testar (a) com `up --wait`; se inviável, (b) + ADR | pending |
-| D2 | `/key/generate` aceita `key` fixo na versão pinada? | F05 | chamada de teste | pending |
+| D1 | Semear a virtual key: entrypoint do gateway (a) vs. serviço `gateway-init` (b) | F05 | testar (a) com `up --wait`; se inviável, (b) + ADR | **resolvida: (a)**. `gateway/entrypoint.sh` + `seed_keys.py`; healthcheck só passa com a chave criada; `up --wait` do zero em ~33 s (ADR 0003) |
+| D2 | `/key/generate` aceita `key` fixo na versão pinada? | F05 | chamada de teste | **resolvida: sim** (`v1.102.1` cria `sk-helpdesk-app-0001` como pedido) |
 | D3 | Campos de preço por token no `model_list` da versão pinada | F06 | `spend > 0` em `/key/info` | pending |
 | D4 | Mini como último recurso em F1, F2, F3 (F4: não, por hipótese) | F06 | `docs/evidence/f01/models-compare/summary.md`: classify e topics idênticos ao large na amostra; extract erra 9/40 (4 com nota fiscal como pedido, formato válido); suggest ~44% do tamanho | evidência pronta (decisão na F06) |
 | D5 | Valores de timeout por capacidade e `num_retries` | F06 | medições + limites de 3 s / 15 s / 60 s | pending |
 | D6 | LiteLLM esconde `midstream_error` com fallback no meio do stream? | F07 | teste com `midstream_error` no primário da F2 | pending |
 | D7 | Período curto da F3 na caracterização (≤ 30 s pela borda) | F02 | tempo medido na F01 | **resolvida**: `2026-08-01`→`2026-08-01` = 137 tickets, 1 lote, 9,85 s pela borda |
-| D8 | `config.py` na main: módulo próprio vs. ponto de composição | F04/F05 | responsabilidade + métrica; ADR 0008 | pending |
-| D9 | Onde moram exceções de domínio sem cair na zona de dor | F05/F07 | idem | pending |
-| D10 | Classe abstrata indireta e imports em `TYPE_CHECKING` na régua | F03 | interpretação literal + ADR 0008 | pending |
+| D8 | `config.py` na main: módulo próprio vs. ponto de composição | F04/F05 | responsabilidade + métrica; ADR 0008 | **resolvida (Revisão 1 do refactoring-plan)**: dissolver `config`; nomes físicos e chaves vão para o gateway, o resto é lido em `main` e injetado |
+| D9 | Onde moram exceções de domínio sem cair na zona de dor | F05/F07 | idem | parcial: adaptadores concretos declaram a porta que implementam (`class GatewayClient(LLMGateway)`); exceções de domínio decididas na F05/F07 |
+| D10 | Classe abstrata indireta e imports em `TYPE_CHECKING` na régua | F03 | interpretação literal + ADR 0008 | **resolvida**: só bases diretas `Protocol`/`ABC`; todo import conta (incl. funções e `TYPE_CHECKING`); arredondamento meio para cima; CSV com 2 casas (ADR 0008) |
 
 ### 8.2 Riscos
 
 | ID | Risco | Prob. | Impacto | Mitigação |
 |---|---|---|---|---|
 | R1 | Tag publicada num commit que não cumpre o marco | baixa | **alto** (tag imutável) | gates de marco + confirmação humana antes da tag |
-| R2 | Tradução Anthropic↔OpenAI no gateway altera a saída e quebra a suíte na v2 | média | alto | comparar crus; endpoint nativo no adaptador se preciso |
+| R2 | Tradução Anthropic↔OpenAI no gateway altera a saída e quebra a suíte na v2 (**não ocorreu**: saída e tokens idênticos, F05) | média | alto | comparar crus; endpoint nativo no adaptador se preciso |
 | R3 | Buffer de SSE na cadeia (gateway/uvicorn/nginx) | média | alto | `X-Accel-Buffering: no`; teste peça por peça |
 | R4 | Retries multiplicados (gateway × fallback × SDK) | média | médio | `max_retries=0` no app; contar no `/admin/calls` |
 | R5 | Spend do LiteLLM com atraso → orçamento não estoura na hora | média | médio | roteiro com margem; fallback no app + ADR |
 | R6 | Cooldown do router polui cenários seguidos | média | médio | reset e restart entre cenários; ajustar o cooldown |
 | R7 | Zona de dor na main por folhas concretas (config, erros) | alta | médio | responsabilidade no ponto de composição; exceções válidas só para tipos de valor |
 | R8 | CI lento/instável com LiteLLM + Postgres | média | baixo | cache, timeout maior, evidência local |
+| R15 | Check de CI com `! grep` nunca falha em `bash -e` (ocorreu até a F05; corrigido no PR #8) | — | alto (falso verde) | `if grep ...; then exit 1; fi`, testado com nome plantado |
 | R9 | Docker/Drive: workspace em Google Drive | — | — | mitigado por U1 (clone em `C:\dev`) |
 | R10 | gh sem escopo `workflow` | certo | bloqueia a F00 | ação humana na F00 |
 | R12 | Acentos em `curl -d` no Windows corrompem o corpo (400) | certo neste host | médio (falso negativo em testes/roteiros) | payloads em arquivo + `--data-binary @arq`; testes em Python (httpx) |
