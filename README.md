@@ -139,11 +139,30 @@ python -m pytest tests/characterization -q
 
 A suíte (`tests/characterization/`) tem 17 casos: corpo inteiro, status e `Content-Type` das 4 features, mais pelo menos um erro de entrada por feature. Cada teste começa com `POST localhost:8090/admin/reset`. As URLs podem ser trocadas com `HELPDESK_BASE_URL` e `PROVIDER_ADMIN_URL`.
 
-*Script de métrica (F03): em construção.*
+Métrica de acoplamento (Ca, Ce, I, A, D pela régua do requisito 3; grava `metrics/results/<rótulo>.csv` e `.png`):
+
+```bash
+pip install -r metrics/requirements.txt
+python metrics/coupling.py app/helpdesk --name main          # mede o checkout atual
+git worktree add ../v1 v1-coupled                             # mede uma tag a partir de um checkout dela
+python metrics/coupling.py ../v1/app/helpdesk --name v1-coupled
+git worktree remove ../v1
+python -m pytest metrics/tests -q                             # testes do script (inclui o oráculo da v1)
+```
 
 ## Métrica
 
-*Em construção (F03/F05/F08).*
+Script: [`metrics/coupling.py`](metrics/coupling.py); régua e interpretações no [ADR 0008](docs/adr/0008-medir-acoplamento-pela-regua-fixa.md). *Leitura de v2 e main: em construção (F05/F08).*
+
+### v1-coupled
+
+![A × I da v1-coupled](metrics/results/v1-coupled.png)
+
+[`metrics/results/v1-coupled.csv`](metrics/results/v1-coupled.csv): nenhum componente tem abstração (A = 0 em todo o pacote), então a posição de cada um no gráfico depende só da instabilidade.
+
+- **Zona de dor:** `config` (Ca 6, D 1,00), `llm` (Ca 4, I 0,20, D 0,80) e `schemas` (Ca 5, D 1,00). `config` e `llm` são exatamente os detalhes voláteis do diagnóstico (nome do modelo, provider, chave, SDK) e são **concretos e muito usados**: qualquer troca de modelo ou provider mexe neles e se propaga para as quatro features. `schemas` são os tipos do contrato HTTP: estáveis por natureza (decisão no ADR 0008, na F08).
+- **Features** (`classification`, `suggestion`, `extraction`: I 0,75; `report`: I 0,80) e `main` (I 1,00) ficam perto da Main Sequence só por serem instáveis: dependem diretamente de `llm` e `config` concretos.
+- `tickets` (I 0,50, D 0,50) fica na borda da zona, sem estar nela (I não é < 0,5).
 
 ## Tabela de capacidades
 

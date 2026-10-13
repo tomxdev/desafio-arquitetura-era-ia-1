@@ -1,0 +1,6 @@
+# Reprodutibilidade e ordem (2026-10-13T15:47:39Z)
+$ git worktree add ../v1 v1-coupled && python metrics/coupling.py ../v1/app/helpdesk --name chk --out-dir $TMP --no-plot && diff $TMP/chk.csv metrics/results/v1-coupled.csv
+OK idêntico byte a byte
+
+# O script nasce depois da tag (RQ-3.2)
+metrics/coupling.py existe em v1-coupled? não

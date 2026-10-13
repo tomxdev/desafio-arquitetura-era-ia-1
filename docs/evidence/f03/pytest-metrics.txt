@@ -1,0 +1,15 @@
+# 2026-10-13T15:47:30Z
+$ python -m pytest metrics/tests -v
+metrics/tests/test_coupling.py::test_v1_oracle_via_cli PASSED            [  8%]
+metrics/tests/test_coupling.py::test_csv_header_and_png PASSED           [ 16%]
+metrics/tests/test_coupling.py::test_versioned_v1_csv_matches_oracle PASSED [ 25%]
+metrics/tests/test_coupling.py::test_relative_absolute_and_subpackages PASSED [ 33%]
+metrics/tests/test_coupling.py::test_abstract_classes PASSED             [ 41%]
+metrics/tests/test_coupling.py::test_isolated_component_and_imports_inside_functions PASSED [ 50%]
+metrics/tests/test_coupling.py::test_relative_import_above_root_is_ignored PASSED [ 58%]
+metrics/tests/test_coupling.py::test_rounding[value0-0.13] PASSED        [ 66%]
+metrics/tests/test_coupling.py::test_rounding[value1-0.67] PASSED        [ 75%]
+metrics/tests/test_coupling.py::test_rounding[value2-0.33] PASSED        [ 83%]
+metrics/tests/test_coupling.py::test_rounding[value3-1.00] PASSED        [ 91%]
+metrics/tests/test_coupling.py::test_rounding[value4-0.00] PASSED        [100%]
+============================= 12 passed in 0.95s ==============================

@@ -1186,7 +1186,7 @@ git clean -ndx          # revisar antes de usar -fdx; nunca apagar .env sem quer
 | D7 | Período curto da F3 na caracterização (≤ 30 s pela borda) | F02 | tempo medido na F01 | **resolvida**: `2026-08-01`→`2026-08-01` = 137 tickets, 1 lote, 9,85 s pela borda |
 | D8 | `config.py` na main: módulo próprio vs. ponto de composição | F04/F05 | responsabilidade + métrica; ADR 0008 | pending |
 | D9 | Onde moram exceções de domínio sem cair na zona de dor | F05/F07 | idem | pending |
-| D10 | Classe abstrata indireta e imports em `TYPE_CHECKING` na régua | F03 | interpretação literal + ADR 0008 | pending |
+| D10 | Classe abstrata indireta e imports em `TYPE_CHECKING` na régua | F03 | interpretação literal + ADR 0008 | **resolvida**: só bases diretas `Protocol`/`ABC`; todo import conta (incl. funções e `TYPE_CHECKING`); arredondamento meio para cima; CSV com 2 casas (ADR 0008) |
 
 ### 8.2 Riscos
 

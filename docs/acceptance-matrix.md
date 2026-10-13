@@ -20,9 +20,9 @@
 
 | ID | Critério | Fase | Verificação | Evidência | Status |
 |---|---|---|---|---|---|
-| AC-MET-01 | `metrics/results/` contém, para `v1-coupled`, `v2-decoupled` e `main`, CSV com cabeçalho `component,ca,ce,i,a,d` e gráfico A × I com a Main Sequence | F03 (v1), F05 (v2), F08 (main) | S: `for v in v1-coupled v2-decoupled main; do head -1 metrics/results/$v.csv \| grep -qx 'component,ca,ce,i,a,d' && test -f metrics/results/$v.png && echo $v OK; done`; revisão visual: reta A+I=1 | `metrics/results/*.csv`, `*.png` | pending |
-| AC-MET-02 | Rodar o script da `main` sobre um checkout da `v1-coupled` reproduz o CSV versionado | F03, F09 | S: `git worktree add ../v1 v1-coupled && python metrics/coupling.py ../v1/app/helpdesk --name chk --out-dir /tmp/chk && diff /tmp/chk/chk.csv metrics/results/v1-coupled.csv; git worktree remove ../v1` | `docs/evidence/f09/metric-repro.txt` | pending |
-| AC-MET-03 | Os CSVs seguem a régua do req. 3, e a medição da `v1-coupled` bate com a recalculada pelo avaliador | F03 | `pytest metrics/tests -q` (inclui o teste de oráculo da tabela 1.1 do plano); conferência manual de 3 módulos | `docs/evidence/f03/{pytest-metrics.txt,manual-check.md}` | pending |
+| AC-MET-01 | `metrics/results/` contém, para `v1-coupled`, `v2-decoupled` e `main`, CSV com cabeçalho `component,ca,ce,i,a,d` e gráfico A × I com a Main Sequence | F03 (v1), F05 (v2), F08 (main) | S: `for v in v1-coupled v2-decoupled main; do head -1 metrics/results/$v.csv \| grep -qx 'component,ca,ce,i,a,d' && test -f metrics/results/$v.png && echo $v OK; done`; revisão visual: reta A+I=1 | `metrics/results/*.csv`, `*.png` | in_progress (v1 versionada; v2 na F05, main na F08) |
+| AC-MET-02 | Rodar o script da `main` sobre um checkout da `v1-coupled` reproduz o CSV versionado | F03, F09 | S: `git worktree add ../v1 v1-coupled && python metrics/coupling.py ../v1/app/helpdesk --name chk --out-dir /tmp/chk && diff /tmp/chk/chk.csv metrics/results/v1-coupled.csv; git worktree remove ../v1` | `docs/evidence/f09/metric-repro.txt` | in_progress (reproduz na F03; reexecução na F09) |
+| AC-MET-03 | Os CSVs seguem a régua do req. 3, e a medição da `v1-coupled` bate com a recalculada pelo avaliador | F03 | `pytest metrics/tests -q` (inclui o teste de oráculo da tabela 1.1 do plano); conferência manual de 3 módulos | `docs/evidence/f03/{pytest-metrics.txt,manual-check.md}` | done |
 | AC-MET-04 | Na `main`, nenhum componente na zona de dor (A<0,5, I<0,5 e D≥0,5), exceto os declarados no ADR da métrica como estáveis por natureza, com justificativa; o componente que chama o gateway e as features não podem ser exceção | F08 | S: script de zona de dor (F08, ação 2) × lista do ADR 0008 | `docs/evidence/f08/pain-zone-check.txt`, `docs/adr/0008-*.md` | pending |
 | AC-MET-05 | Na `main`, o código que chama o gateway fica em um único componente de `app/`, identificado no README; nenhuma feature o importa; só o ponto de composição depende dele | F05, F08 | S: `grep -rlnE "^(import\|from) (openai\|httpx\|anthropic\|requests)" app/helpdesk` → só `adapters/gateway.py`; `grep -rnE "adapters(\.gateway\| import gateway)" app/helpdesk \| grep -v main.py` → vazio; métrica: Ca do adaptador = {main}; README cita o componente | `docs/evidence/f08/gateway-client-check.txt` | pending |
 
@@ -86,8 +86,8 @@
 | RQ-2.1 | Suíte em `tests/characterization/`, via API HTTP, ≥1 erro de entrada por feature | F02 | revisão + pytest | `tests/characterization/` | done |
 | RQ-2.2 | Suíte roda com um único comando documentado no README, contra o compose | F02 | `python -m pytest tests/characterization -q` no README "Como rodar" | `README.md` | done |
 | RQ-2.3 | Na `main`, a suíte pode ser atualizada para o novo contrato (F2/F3) | F07 | pytest na main | `tests/characterization/`, `tests/contract/` | pending |
-| RQ-3.1 | Script em `metrics/` recebe o caminho do código a medir | F03 | CLI `python metrics/coupling.py <path> --name <v>` | `metrics/coupling.py` | pending |
-| RQ-3.2 | O script nasce **depois** da tag v1 (mede a tag via worktree) | F03 | S: `git log --diff-filter=A --format=%H -- metrics/coupling.py` não é ancestral de `v1-coupled` (`! git merge-base --is-ancestor <sha> v1-coupled`) | `docs/evidence/f03/script-after-v1.txt` | pending |
+| RQ-3.1 | Script em `metrics/` recebe o caminho do código a medir | F03 | CLI `python metrics/coupling.py <path> --name <v>` | `metrics/coupling.py` | done |
+| RQ-3.2 | O script nasce **depois** da tag v1 (mede a tag via worktree) | F03 | S: `git log --diff-filter=A --format=%H -- metrics/coupling.py` não é ancestral de `v1-coupled` (`! git merge-base --is-ancestor <sha> v1-coupled`) | `docs/evidence/f03/reproducibility.txt` | done |
 | RQ-4.1 | Piloto em um único componente antes de escalar, com medição antes/depois | F04 | plano + CSVs | `docs/evidence/f04/` | pending |
 | RQ-4.2 | Refatoração feita com agente de IA; métrica e testes como juízes | F05 | log de handoff | `docs/evidence/f05/handoff-log.md` | pending |
 | RQ-4.3 | Na v2, um modelo `large` por trás de cada capacidade; mesmas rotas e modos | F05 | `gateway/config.yaml` na tag; suíte verde | `docs/evidence/f05/` | pending |
@@ -113,7 +113,7 @@
 | RS-02 | Na v2 e na main, toda chamada a modelo passa pelo gateway; `app/` não chama o provider-fake | F05+ | `! grep -rn "provider-fake\|8090" app/`; `/admin/calls` só com chamadas originadas pelo gateway (logs do gateway) | `docs/evidence/f05/greps.txt` | pending |
 | RS-03 | Na v2 e na main, `FAKE_OPENAI_KEY`/`FAKE_ANTHROPIC_KEY` fora de `app/` e do ambiente do `app` | F05+ | AC-GW-02 (nas duas: checkout da tag v2 e main) | `docs/evidence/f05/`, `docs/evidence/f09/` | pending |
 | RS-04 | Refatorar o `app/` existente; sem reescrever do zero nem trocar de linguagem; Python 3.12 + FastAPI | F04–F07 | revisão do histórico (`git log --stat app/`): commits incrementais; `app/Dockerfile` em `python:3.12-*`; `fastapi` em `requirements.txt` | `docs/refactoring-plan.md` | pending |
-| RS-05 | Mesma régua de métrica nas três medições | F03, F05, F08 | mesmo `metrics/coupling.py` (sem mudança de régua entre medições: `git log -p metrics/coupling.py` revisado) | `docs/evidence/f09/metric-repro.txt` | pending |
+| RS-05 | Mesma régua de métrica nas três medições | F03, F05, F08 | mesmo `metrics/coupling.py` (sem mudança de régua entre medições: `git log -p metrics/coupling.py` revisado) | `docs/evidence/f09/metric-repro.txt` | in_progress (script único desde a F03) |
 | RS-06 | Avaliação sem provider real nem serviço externo além das imagens públicas do compose | F09 | clone limpo sem rede para APIs reais; `.env.example` só com chaves fake | `docs/evidence/f09/fresh-clone.log` | pending |
 | RS-07 | Serviço adicional (além de `app` e `gateway`) tem ADR justificando por requisito | F05, F08 | AC-RDM-04 | `docs/evidence/f08/services-vs-adr.txt` | pending |
 | RS-08 | Limitação real do gateway documentada no ADR e resolvida na aplicação | F06, F07 | revisão dos ADRs 0006/0009 (seção "Limitações") | `docs/adr/` | pending |
@@ -138,7 +138,7 @@
 | ST-04 | `.env.example` estendido (basta copiar) | F05, F06 | AC-RDM-02 | `.env.example` | pending |
 | ST-05 | `gateway/` com capacidades, fallback, chaves, orçamentos e limites | F05, F06 | revisão de `gateway/config.yaml` + seed | `gateway/` | pending |
 | ST-06 | `tests/characterization/` | F02 | existe e passa | `tests/characterization/` | done |
-| ST-07 | `metrics/` com script e `results/` das três versões | F03, F05, F08 | AC-MET-01 | `metrics/` | pending |
+| ST-07 | `metrics/` com script e `results/` das três versões | F03, F05, F08 | AC-MET-01 | `metrics/` | in_progress (script + v1) |
 | ST-08 | `docs/refactoring-plan.md` | F04, F05 | AC-PLAN-01 | `docs/refactoring-plan.md` | pending |
 | ST-09 | `docs/adr/` (um arquivo por decisão) | F05–F08 | AC-ADR-01 | `docs/adr/` | pending |
 | ST-10 | Arquivos extras (Dockerfiles, scripts, testes da main, serviços) declarados no compose e no README | F08 | revisão do README "Como rodar" | `README.md` | pending |
