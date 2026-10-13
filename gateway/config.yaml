@@ -23,15 +23,16 @@ model_list:
     litellm_params: {model: openai/gpt-fake-mini, api_base: http://provider-fake:8090/openai/v1, api_key: os.environ/FAKE_OPENAI_KEY, timeout: 4}
     model_info: {input_cost_per_token: 0.00000015, output_cost_per_token: 0.0000006}
 
-  # F2 Sugerir resposta ---------------------------------------------------------------------
+  # F2 Sugerir resposta (streaming: stream_timeout = espera máxima pelo 1º trecho e entre trechos;
+  # se o destino travar, o gateway desiste em 5 s e passa ao próximo, longe dos 30 s da borda) ----
   - model_name: helpdesk-suggest
-    litellm_params: {model: anthropic/claude-fake-large, api_base: http://provider-fake:8090/anthropic, api_key: os.environ/FAKE_ANTHROPIC_KEY, timeout: 30}
+    litellm_params: {model: anthropic/claude-fake-large, api_base: http://provider-fake:8090/anthropic, api_key: os.environ/FAKE_ANTHROPIC_KEY, timeout: 30, stream_timeout: 5}
     model_info: {input_cost_per_token: 0.000003, output_cost_per_token: 0.000015}
   - model_name: helpdesk-suggest-fallback
-    litellm_params: {model: openai/gpt-fake-large, api_base: http://provider-fake:8090/openai/v1, api_key: os.environ/FAKE_OPENAI_KEY, timeout: 30}
+    litellm_params: {model: openai/gpt-fake-large, api_base: http://provider-fake:8090/openai/v1, api_key: os.environ/FAKE_OPENAI_KEY, timeout: 30, stream_timeout: 5}
     model_info: {input_cost_per_token: 0.0000025, output_cost_per_token: 0.00001}
   - model_name: helpdesk-suggest-weak
-    litellm_params: {model: anthropic/claude-fake-mini, api_base: http://provider-fake:8090/anthropic, api_key: os.environ/FAKE_ANTHROPIC_KEY, timeout: 30}
+    litellm_params: {model: anthropic/claude-fake-mini, api_base: http://provider-fake:8090/anthropic, api_key: os.environ/FAKE_ANTHROPIC_KEY, timeout: 30, stream_timeout: 5}
     model_info: {input_cost_per_token: 0.0000008, output_cost_per_token: 0.000004}
 
   # F3 Relatório de temas (uma chamada por lote de 150 tickets) -----------------------------

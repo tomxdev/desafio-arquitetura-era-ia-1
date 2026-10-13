@@ -26,7 +26,7 @@ Opção 2. O gateway conhece os destinos físicos e os tipos de erro de cada pro
 | Fallback | gateway (`router_settings.fallbacks`) | ADR 0006 |
 | Cooldown | desligado (`disable_cooldowns: true`) | cada requisição tenta o primário: o número de tentativas é determinístico e é o declarado (circuit breaker fora de escopo) |
 | Retry no app | **nenhum** | `GatewayClient`: `max_retries=0` |
-| Timeout no app | `adapters/gateway.py` | 60 s por chamada (acima do pior caso do gateway); ajustado por feature na F07 |
+| Timeout no app | `adapters/gateway.py`, valores em `main.TIMEOUTS` | 12 s por chamada em F1/F2/F4 (abaixo dos 15 s exigidos; na F2, espera pelo 1º trecho e entre trechos) e 50 s por lote na F3 (a tarefa chega a `failed` em menos de 60 s) |
 | Falha explícita | `adapters/gateway.py` + `main.py` | timeout, conexão ou erro do gateway viram `ports.CapabilityUnavailable` → `503 {"detail": "Capacidade <x> indisponível: <motivo>"}` |
 
 **Máximo de tentativas por destino** (por chamada; a F3 faz uma chamada por lote):

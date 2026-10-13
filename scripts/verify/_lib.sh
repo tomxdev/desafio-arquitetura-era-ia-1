@@ -2,6 +2,7 @@
 # Funções comuns dos roteiros de verificação (F06+). Exigem o compose no ar e python no PATH.
 set -u
 export MSYS_NO_PATHCONV=1   # Git Bash: não converter "/tickets/..." em caminho do Windows
+export PYTHONIOENCODING=utf-8   # saída UTF-8 dos python -c no Windows (acentos nas evidências)
 cd "$(dirname "${BASH_SOURCE[0]}")/../.."
 
 EDGE=http://localhost:8000
@@ -32,9 +33,30 @@ print(' '.join('%s:%s' % (c['model'], c['status']) for c in reversed(json.load(s
 }
 
 # feature <rota> <payload> → grava o corpo em "$BODY_FILE" e imprime "status tempo".
+# Se a feature for assíncrona (202, F3), acompanha a URL de status até o fim: imprime o status do
+# resultado (200) ou "failed", e o tempo total desde o pedido.
 feature() {
-  curl -s -o "$BODY_FILE" -w '%{http_code} %{time_total}' -X POST "$EDGE$1" \
-    -H 'Content-Type: application/json' --data-binary "@$PAYLOADS/$2"
+  local out status total location started
+  started=$(python -c "import time; print(time.time())")
+  out=$(curl -s -D "$BODY_FILE.h" -o "$BODY_FILE" -w '%{http_code} %{time_total}' -X POST "$EDGE$1" \
+    -H 'Content-Type: application/json' --data-binary "@$PAYLOADS/$2")
+  read -r status total <<< "$out"
+  if [ "$status" = 202 ]; then
+    location=$(grep -i '^location:' "$BODY_FILE.h" | tr -d '\r' | awk '{print $2}')
+    while :; do
+      status=$(curl -s -D "$BODY_FILE.h" -o "$BODY_FILE" -w '%{http_code}' "$EDGE$location")
+      if [ "$status" = 303 ]; then
+        location=$(grep -i '^location:' "$BODY_FILE.h" | tr -d '\r' | awk '{print $2}')
+        status=$(curl -s -o "$BODY_FILE" -w '%{http_code}' "$EDGE$location"); break
+      fi
+      grep -q '"state":"failed"' "$BODY_FILE" && { status=failed; break; }
+      [ "$status" != 200 ] && break
+      sleep 1
+    done
+    total=$(python -c "import time; print(f'{time.time() - $started:.3f}')")
+  fi
+  rm -f "$BODY_FILE.h"
+  echo "$status $total"
 }
 
 check() { # descrição condição(0/1)

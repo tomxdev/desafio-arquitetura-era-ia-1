@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+import time
 from pathlib import Path
 
 import httpx
@@ -32,6 +33,38 @@ def snapshot(response: httpx.Response) -> dict:
 
 def load_golden(name: str) -> dict:
     return json.loads((GOLDEN / f"{name}.json").read_text(encoding="utf-8"))
+
+
+# Na main, F2 e F3 mudaram de modo de execução (requisito 6). Os goldens continuam os da v1: o
+# conteúdo entregue tem de ser o mesmo; muda só a forma de consumir (SSE e polling).
+
+def sse_events(response: httpx.Response) -> list[tuple[str, dict]]:
+    """[(evento, dados)] de uma resposta text/event-stream (evento padrão: "message")."""
+    events, name = [], "message"
+    for line in response.iter_lines():
+        if line.startswith("event: "):
+            name = line[len("event: "):]
+        elif line.startswith("data: "):
+            events.append((name, json.loads(line[len("data: "):])))
+            name = "message"
+    return events
+
+
+def stream_suggestion(client: httpx.Client, case) -> tuple[httpx.Response, list[tuple[str, dict]]]:
+    with client.stream("POST", case.path, json=case.body) as response:
+        return response, sse_events(response)
+
+
+def wait_report(client: httpx.Client, location: str, timeout: float = 120.0) -> httpx.Response:
+    """Consulta a URL de status até o 303 e devolve a resposta do resultado."""
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        status = client.get(location)
+        if status.status_code == 303:
+            return client.get(status.headers["location"])
+        assert status.status_code == 200 and status.json()["state"] in ("pending", "running"), status.text
+        time.sleep(1)
+    raise AssertionError(f"relatório não ficou pronto em {timeout} s")
 
 
 @pytest.fixture(scope="session")

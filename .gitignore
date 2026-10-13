@@ -8,3 +8,4 @@ __pycache__/
 *.egg-info/
 metrics/.cache/
 scripts/verify/.last-body
+scripts/verify/.last-body.*
