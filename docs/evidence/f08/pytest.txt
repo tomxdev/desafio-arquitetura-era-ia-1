@@ -1,0 +1,4 @@
+$ python -m pytest tests/characterization tests/contract metrics/tests -q
+37 passed, 1 skipped in 76.95s (0:01:16)
+
+# antes da F08 este comando falhava na coleta (dois módulos "conftest"); corrigido com tests/contract/__init__.py

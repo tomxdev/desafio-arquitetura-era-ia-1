@@ -49,3 +49,5 @@ Alimenta uma automação de troca e devolução **sem revisão humana**: um camp
 ## Evidência
 
 `bash scripts/verify/fallback.sh` ([saída](../evidence/f06/fallback.txt)): com o primário de cada capacidade em `error_500`, `/admin/calls` mostra 2 tentativas no primário seguidas do sucesso no `large` do outro provider (ex.: F1 `gpt-fake-large:500 gpt-fake-large:500 claude-fake-large:200`, 3,4 s). Com os dois `large` em `error_500`: F1 `200` via `gpt-fake-mini`, F2 e F3 `200` via `claude-fake-mini`, F4 `503 {"detail":"Capacidade helpdesk-extract indisponível: nenhum modelo disponível (gateway respondeu 500)"}` sem nenhuma chamada a modelo `mini`.
+
+Reexecutado na F08: [saída](../evidence/f08/fallback.txt), mesmas sequências em `/admin/calls` (`RESULTADO: OK`).

@@ -40,3 +40,5 @@ grep -rE "gpt-fake|claude-fake" app/          # vazio
 grep -rn "CAPABILITY =" app/helpdesk          # um nome lógico por feature
 grep -n "model_name" gateway/config.yaml
 ```
+
+Reexecutado na F08 ([saída](../evidence/f08/adr-evidence.txt)): um `CAPABILITY` por feature e 11 `model_name` no gateway (4 capacidades, 4 `-fallback`, 3 `-weak`).

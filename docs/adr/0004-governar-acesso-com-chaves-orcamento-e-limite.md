@@ -39,3 +39,5 @@ Opção 2. O gateway é o único ponto por onde toda chamada passa (ADR 0001) e 
 ## Evidência
 
 `bash scripts/verify/governance.sh` ([saída](../evidence/f06/governance.txt)): a 1ª requisição com `demo-budget` passa (`/admin/calls` 0 → 1) e a seguinte é recusada com `429 budget_exceeded` (1 → 1); com `demo-rpm`, a 1ª e a 2ª passam (1 → 2 → 3) e a 3ª no mesmo minuto é recusada com `429` (3 → 3). Rotação: [saída](../evidence/f06/key-rotation.txt).
+
+Reexecutado na F08: [saída](../evidence/f08/governance.txt), mesmo resultado (`RESULTADO: OK`).

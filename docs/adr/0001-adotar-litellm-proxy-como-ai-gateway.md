@@ -37,3 +37,5 @@ grep -rE "gpt-fake|claude-fake" app/              # vazio
 curl -s -X POST localhost:8090/admin/reset; <F1 pela borda>; curl -s "localhost:8090/admin/calls?last=1"
 docker compose logs gateway | grep "POST /chat/completions"   # o SDK openai usa base_url + /chat/completions
 ```
+
+Reexecutado na F08 ([saída](../evidence/f08/adr-evidence.txt)): gateway e `gateway-db` saudáveis, nenhum nome físico em `app/`, F1 pela borda registrada em `/admin/calls` como `openai/gpt-fake-large` e `POST /chat/completions` nos logs do gateway.
