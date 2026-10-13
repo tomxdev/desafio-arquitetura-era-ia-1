@@ -1,0 +1,8 @@
+# Smoke F00 2026-10-13T14:51:00Z
+$ docker compose ps
+SERVICE         STATUS                   PORTS
+app             Up 3 seconds (healthy)   8080/tcp
+edge            Up 1 second              0.0.0.0:8000->80/tcp, [::]:8000->80/tcp
+provider-fake   Up 9 seconds (healthy)   0.0.0.0:8090->8090/tcp, [::]:8090->8090/tcp
+$ curl -s -w status localhost:8000/health
+{"status":"ok"} status=200 total=0.005335s
