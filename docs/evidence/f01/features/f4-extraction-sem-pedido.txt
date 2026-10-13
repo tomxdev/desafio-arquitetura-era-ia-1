@@ -1,0 +1,9 @@
+$ curl -s -X POST localhost:8000/tickets/extraction -H 'Content-Type: application/json' --data-binary @scripts/diagnostics/payloads/ticket-sem-pedido.json
+# corpo: {"ticket_id": "TK-00100", "text": "Gostaria de saber o horário de atendimento da loja"}
+
+{"ticket_id":"TK-00100","order_number":null,"product":null}
+--
+status=200 ttfb=1.057885s total=1.057942s
+
+$ curl -s 'localhost:8090/admin/calls?last=5'
+[{"id":"a95f3126e053","ts":"2026-10-13T15:01:12.009+00:00","provider":"openai","model":"gpt-fake-large","task":"extract","stream":false,"status":200,"input_tokens":16,"output_tokens":10,"duration_ms":1051}]

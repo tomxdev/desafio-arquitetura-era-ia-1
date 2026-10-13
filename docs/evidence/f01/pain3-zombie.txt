@@ -1,0 +1,5 @@
+# Requisição zumbi da dor 3c (2026-10-13T15:17:14Z)
+# Contexto: às 15:11:53 a F1 foi chamada com o openai em 'timeout'; a borda devolveu 504 às 15:12:23.
+# Às ~15:12:24 o script fez POST /admin/reset (modo normal e registro limpo). Nenhuma requisição nova foi feita à aplicação desde então.
+$ curl -s 'localhost:8090/admin/calls?last=10'
+[{"id":"3e1c7412c3c2","ts":"2026-10-13T15:16:53.976+00:00","provider":"openai","model":"gpt-fake-large","task":"classify","stream":false,"status":200,"input_tokens":19,"output_tokens":11,"duration_ms":1075}]

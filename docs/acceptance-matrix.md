@@ -11,7 +11,7 @@
 
 | ID | Critério | Fase | Verificação | Evidência | Status |
 |---|---|---|---|---|---|
-| AC-DIAG-01 | A seção "Diagnóstico da v1" do README registra as quatro dores, cada uma com o comando executado, o resultado observado e o trecho de `app/` onde está a causa | F01 (final em F08) | revisão: 4 subseções × {comando, observado com status/tempo/`/admin/calls`, `app/helpdesk/<arq>.py:<linha>`}; `grep -n "Diagnóstico da v1" README.md` | `README.md`, `docs/evidence/f01/pain{1..4}-*.txt` | pending |
+| AC-DIAG-01 | A seção "Diagnóstico da v1" do README registra as quatro dores, cada uma com o comando executado, o resultado observado e o trecho de `app/` onde está a causa | F01 (final em F08) | revisão: 4 subseções × {comando, observado com status/tempo/`/admin/calls`, `app/helpdesk/<arq>.py:<linha>`}; `grep -n "Diagnóstico da v1" README.md` | `README.md`, `docs/evidence/f01/pain{1..4}-*.txt` | done |
 | AC-DIAG-02 | A tag `v1-coupled` existe no fork, e nela `app/` é idêntico ao do repositório base | F02 | S: `git ls-remote --tags origin \| grep v1-coupled` e `git diff --quiet upstream/main v1-coupled -- app/ && echo OK` | `docs/evidence/f02/release-v1-checks.txt`, `docs/evidence/f09/tags.txt` | pending |
 | AC-DIAG-03 | A suíte fixa o corpo das respostas das 4 features (não só o status), roda com o comando documentado e passa na `v1-coupled` e na `v2-decoupled` | F02, F05 | S: checkout de cada tag → `docker compose down -v && docker compose up -d --build --wait && python -m pytest tests/characterization -q`; revisão: asserts de corpo inteiro (golden) nas 4 features | `docs/evidence/f02/pytest-v1.txt`, `docs/evidence/f05/pytest-v2.txt` | pending |
 | AC-DIAG-04 | `git diff v1-coupled v2-decoupled -- tests/characterization/` não mostra diferença | F05 | S: `git diff --exit-code v1-coupled v2-decoupled -- tests/characterization/` | `docs/evidence/f05/release-v2-checks.txt` | pending |
@@ -78,11 +78,11 @@
 
 | ID | Requisito | Fase | Verificação | Evidência | Status |
 |---|---|---|---|---|---|
-| RQ-1.1 | Subir o ambiente e exercitar as 4 features pela borda | F01 | curl de F1–F4 | `docs/evidence/f01/features/*.txt` | pending |
-| RQ-1.2 | Não alterar `app/` no diagnóstico (exceto a dor 4, temporária e desfeita antes da tag) | F01, F02 | S: `git diff --quiet upstream/main -- app/` no fim da F01 e na tag | `docs/evidence/f01/pain4-*.txt` | pending |
-| RQ-1.3 | Comparar large × mini em cada tarefa (fricção 4) | F01 | `scripts/diagnostics/compare_models.py` | `docs/evidence/f01/models-compare/` | pending |
-| RQ-1.4 | Identificar timeout e retries padrão dos SDKs e comparar com os 30 s da borda (fricção 3) | F01 | `docker compose exec app python -c ...` | `docs/evidence/f01/sdk-defaults.txt` | pending |
-| RQ-1.5 | Mostrar que o 504 não cancela o trabalho (fricção 2) | F01 | `/admin/calls` após o 504 | `docs/evidence/f01/pain1-calls-after-504.txt` | pending |
+| RQ-1.1 | Subir o ambiente e exercitar as 4 features pela borda | F01 | curl de F1–F4 | `docs/evidence/f01/features/*.txt` | done |
+| RQ-1.2 | Não alterar `app/` no diagnóstico (exceto a dor 4, temporária e desfeita antes da tag) | F01, F02 | S: `git diff --quiet upstream/main -- app/` no fim da F01 e na tag | `docs/evidence/f01/pain4-*.txt` | done |
+| RQ-1.3 | Comparar large × mini em cada tarefa (fricção 4) | F01 | `scripts/diagnostics/compare_models.py` | `docs/evidence/f01/models-compare/` | done |
+| RQ-1.4 | Identificar timeout e retries padrão dos SDKs e comparar com os 30 s da borda (fricção 3) | F01 | `docker compose exec app python -c ...` | `docs/evidence/f01/sdk-defaults.txt` | done |
+| RQ-1.5 | Mostrar que o 504 não cancela o trabalho (fricção 2) | F01 | `/admin/calls` após o 504 | `docs/evidence/f01/pain1-calls-after-504.txt` | done |
 | RQ-2.1 | Suíte em `tests/characterization/`, via API HTTP, ≥1 erro de entrada por feature | F02 | revisão + pytest | `tests/characterization/` | pending |
 | RQ-2.2 | Suíte roda com um único comando documentado no README, contra o compose | F02 | `python -m pytest tests/characterization -q` no README "Como rodar" | `README.md` | pending |
 | RQ-2.3 | Na `main`, a suíte pode ser atualizada para o novo contrato (F2/F3) | F07 | pytest na main | `tests/characterization/`, `tests/contract/` | pending |
@@ -123,7 +123,7 @@
 
 | ID | Item | Fase | Verificação | Evidência | Status |
 |---|---|---|---|---|---|
-| TC-01 | Docker e Docker Compose v2 | F00 | `docker compose version` | `docs/evidence/f00/host-versions.txt` | pending |
+| TC-01 | Docker e Docker Compose v2 | F00 | `docker compose version` | `docs/evidence/f00/host-versions.txt` | done |
 | TC-02 | Git, com as tags publicadas no fork | F02, F05, F09 | `git ls-remote --tags origin` | `docs/evidence/f09/tags.txt` | pending |
 | TC-03 | AI Gateway self-hosted como serviço `gateway` (não SaaS) | F05 | `docker compose config --services` contém `gateway`; imagem pública | `compose.yaml` | pending |
 | TC-04 | App em Python 3.12 com FastAPI | F05–F09 | `docker compose exec app python --version`; `pip show fastapi` | `docs/evidence/f09/matrix-run.md` | pending |
@@ -132,8 +132,8 @@
 
 | ID | Item | Fase | Verificação | Evidência | Status |
 |---|---|---|---|---|---|
-| ST-01 | Fork público no GitHub com a versão final na `main` | F00, F09 | `gh repo view tomxdev/desafio-arquitetura-era-ia-1 --json visibility,isFork,parent` | `docs/evidence/f09/repo-visibility.txt` | pending |
-| ST-02 | `README.md` substituído pelo do aluno | F01, F08 | revisão | `README.md` | pending |
+| ST-01 | Fork público no GitHub com a versão final na `main` | F00, F09 | `gh repo view tomxdev/desafio-arquitetura-era-ia-1 --json visibility,isFork,parent` | `docs/evidence/f09/repo-visibility.txt` | in_progress (fork público criado na F00; `main` final na F09) |
+| ST-02 | `README.md` substituído pelo do aluno | F01, F08 | revisão | `README.md` | in_progress (F01: README próprio; final na F08) |
 | ST-03 | `compose.yaml` estendido sobe tudo com um comando | F05–F09 | AC-RDM-02 | `docs/evidence/f09/fresh-clone.log` | pending |
 | ST-04 | `.env.example` estendido (basta copiar) | F05, F06 | AC-RDM-02 | `.env.example` | pending |
 | ST-05 | `gateway/` com capacidades, fallback, chaves, orçamentos e limites | F05, F06 | revisão de `gateway/config.yaml` + seed | `gateway/` | pending |
@@ -150,7 +150,7 @@
 | ID | Seção | Conteúdo mínimo | Fase | Status |
 |---|---|---|---|---|
 | RM-01 | Visão geral | solução em 1–2 parágrafos, incluindo o comportamento quando um provider cai | F08 | pending |
-| RM-02 | Diagnóstico da v1 | 4 dores: comando, resultado, causa no código | F01 | pending |
+| RM-02 | Diagnóstico da v1 | 4 dores: comando, resultado, causa no código | F01 | done |
 | RM-03 | Como rodar | subida, testes de caracterização e script de métrica, com os comandos exatos | F02, F03, F08 | pending |
 | RM-04 | Métrica | leitura dos três gráficos (o que saiu de onde e por quê) e exceções declaradas | F08 | pending |
 | RM-05 | Tabela de capacidades | capacidade lógica, feature, modelo primário, fallback técnico, política fraca, máximo de tentativas por destino | F06 | pending |

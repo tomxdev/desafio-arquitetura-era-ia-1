@@ -1,0 +1,38 @@
+# Gates F01 (2026-10-13T15:18:36Z)
+OK app/ idêntico ao upstream/main
+OK provider-fake/ edge/ data/ intactos
+11:## Diagnóstico da v1
+Dor 1: 1
+Dor 2: 1
+Dor 3: 1
+Dor 4: 1
+Causas citadas:
+app/helpdesk/config.py:10 app/helpdesk/config.py:10-13 app/helpdesk/config.py:3-4 app/helpdesk/config.py:9-13 app/helpdesk/llm.py:12-26 app/helpdesk/llm.py:20-26 app/helpdesk/llm.py:8-9 app/helpdesk/main.py:20-22 app/helpdesk/main.py:30-32 app/helpdesk/report.py:15-18 app/helpdesk/suggestion.py:5-7 
+docs/evidence/f01:
+features
+gates.txt
+models-compare
+pain1-admin-calls.json
+pain1-calls-after-504.txt
+pain1-report.txt
+pain1-summary.txt
+pain2-suggestion.txt
+pain3-provider-down.txt
+pain3-zombie.txt
+pain4-model-swap.txt
+sdk-defaults.txt
+
+docs/evidence/f01/features:
+f1-classification.txt
+f2-reply-suggestion.txt
+f3-topics-1-dia.txt
+f4-extraction-sem-pedido.txt
+f4-extraction.txt
+
+docs/evidence/f01/models-compare:
+classify.csv
+extract.csv
+suggest.csv
+summary.md
+topics.csv
+.env versionado: 0

@@ -1,0 +1,13 @@
+# Dor 1: relatório do mês (2026-10-13T15:03:54Z)
+$ curl -s -X POST localhost:8000/reports/topics -H 'Content-Type: application/json' --data-binary @scripts/diagnostics/payloads/period-mes.json
+<html>
+<head><title>504 Gateway Time-out</title></head>
+<body>
+<center><h1>504 Gateway Time-out</h1></center>
+<hr><center>nginx/1.27.5</center>
+</body>
+</html>
+
+--
+status=504 ttfb=30.028343s total=30.028396s
+# 504 recebido em 15:04:24. Chamadas topics em /admin/calls (qtd, input_tokens, output_tokens, em_andamento):
