@@ -1,9 +1,11 @@
 import os
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 
 from . import classification, extraction, report, suggestion
 from .adapters.gateway import GatewayClient
+from .ports import CapabilityUnavailable
 from .schemas import (Classification, OrderData, PeriodInput, ReplySuggestion, TicketInput,
                       TopicsReport)
 from .tickets import JsonlTicketSource
@@ -20,6 +22,13 @@ gateway = GatewayClient(
 ticket_source = JsonlTicketSource(os.environ.get("TICKETS_FILE", "/data/tickets.jsonl"))
 
 app = FastAPI(title="Helpdesk")
+
+
+@app.exception_handler(CapabilityUnavailable)
+def capability_unavailable(request: Request, error: CapabilityUnavailable) -> JSONResponse:
+    # Falha explícita e rápida em vez de 500 genérico ou de 504 da borda (tabela de fallback, ADR 0006).
+    return JSONResponse(status_code=503, content={
+        "detail": f"Capacidade {error.capability} indisponível: {error.reason}"})
 
 
 @app.get("/health")

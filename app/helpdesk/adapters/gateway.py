@@ -1,13 +1,14 @@
-from openai import OpenAI
+from openai import APIConnectionError, APIStatusError, APITimeoutError, OpenAI
 
-from ..ports import LLMGateway
+from ..ports import CapabilityUnavailable, LLMGateway
 
 
 class GatewayClient(LLMGateway):
     """Único componente que fala com o modelo: cliente do AI Gateway (API compatível com OpenAI).
 
-    A capacidade lógica vai como `model`; o gateway decide provider e modelo físico. Sem retries no
-    SDK (`max_retries=0`) e com timeout explícito: resiliência não é decisão deste cliente.
+    A capacidade lógica vai como `model`; o gateway decide provider e modelo físico, e é ele quem
+    faz retry e fallback (ADR 0009). Aqui: sem retries no SDK (`max_retries=0`), timeout explícito
+    e tradução das falhas do gateway para `CapabilityUnavailable`.
     """
 
     def __init__(self, base_url: str, api_key: str, timeout: float, max_tokens: int) -> None:
@@ -15,9 +16,20 @@ class GatewayClient(LLMGateway):
         self._max_tokens = max_tokens
 
     def complete(self, capability: str, task: str, content: str) -> str:
-        response = self._client.chat.completions.create(
-            model=capability,
-            max_tokens=self._max_tokens,
-            messages=[{"role": "user", "content": f"TASK: {task}\n{content}"}],
-        )
+        try:
+            response = self._client.chat.completions.create(
+                model=capability,
+                max_tokens=self._max_tokens,
+                messages=[{"role": "user", "content": f"TASK: {task}\n{content}"}],
+            )
+        except APITimeoutError as error:
+            raise CapabilityUnavailable(capability, "tempo esgotado esperando o gateway") from error
+        except APIConnectionError as error:
+            raise CapabilityUnavailable(capability, "gateway inacessível") from error
+        except APIStatusError as error:
+            if error.status_code == 429:
+                reason = "orçamento ou limite de requisições da chave excedido"
+            else:
+                reason = f"nenhum modelo disponível (gateway respondeu {error.status_code})"
+            raise CapabilityUnavailable(capability, reason) from error
         return response.choices[0].message.content
