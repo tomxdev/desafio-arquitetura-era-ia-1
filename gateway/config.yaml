@@ -1,36 +1,79 @@
 # AI Gateway (LiteLLM Proxy): capacidades lógicas do helpdesk → modelos físicos.
-# A aplicação só conhece os nomes lógicos (model_name). Trocar o modelo físico de uma capacidade
-# é editar o bloco dela aqui e reiniciar só o gateway: docker compose restart gateway
+#
+# A aplicação só conhece os quatro nomes lógicos (helpdesk-classify, -suggest, -topics, -extract).
+# Cada um tem um destino primário, um fallback técnico equivalente no OUTRO provider (o outro
+# modelo large) e, quando a política da feature permite, um modelo fraco (mini) como último
+# recurso (ADR 0006). Os grupos *-fallback e *-weak são internos: a chave do app não os chama.
+#
+# Troca de modelo: altere o `model:` da capacidade (ex.: openai/gpt-fake-large → openai/gpt-fake-mini)
+# e rode `docker compose restart gateway`. A aplicação não é reconstruída nem reiniciada.
+#
+# Preços (US$ por token) do provider-fake/README.md: sem eles o gateway calcula custo zero e
+# nenhum orçamento estoura (ADR 0004).
 
 model_list:
-  - model_name: helpdesk-classify          # F1 Classificar ticket
-    litellm_params:
-      model: openai/gpt-fake-large
-      api_base: http://provider-fake:8090/openai/v1
-      api_key: os.environ/FAKE_OPENAI_KEY
+  # F1 Classificar ticket ------------------------------------------------------------------
+  - model_name: helpdesk-classify
+    litellm_params: {model: openai/gpt-fake-large, api_base: http://provider-fake:8090/openai/v1, api_key: os.environ/FAKE_OPENAI_KEY, timeout: 4}
+    model_info: {input_cost_per_token: 0.0000025, output_cost_per_token: 0.00001}
+  - model_name: helpdesk-classify-fallback
+    litellm_params: {model: anthropic/claude-fake-large, api_base: http://provider-fake:8090/anthropic, api_key: os.environ/FAKE_ANTHROPIC_KEY, timeout: 4}
+    model_info: {input_cost_per_token: 0.000003, output_cost_per_token: 0.000015}
+  - model_name: helpdesk-classify-weak
+    litellm_params: {model: openai/gpt-fake-mini, api_base: http://provider-fake:8090/openai/v1, api_key: os.environ/FAKE_OPENAI_KEY, timeout: 4}
+    model_info: {input_cost_per_token: 0.00000015, output_cost_per_token: 0.0000006}
 
-  - model_name: helpdesk-suggest           # F2 Sugerir resposta
-    litellm_params:
-      model: anthropic/claude-fake-large
-      api_base: http://provider-fake:8090/anthropic
-      api_key: os.environ/FAKE_ANTHROPIC_KEY
+  # F2 Sugerir resposta ---------------------------------------------------------------------
+  - model_name: helpdesk-suggest
+    litellm_params: {model: anthropic/claude-fake-large, api_base: http://provider-fake:8090/anthropic, api_key: os.environ/FAKE_ANTHROPIC_KEY, timeout: 30}
+    model_info: {input_cost_per_token: 0.000003, output_cost_per_token: 0.000015}
+  - model_name: helpdesk-suggest-fallback
+    litellm_params: {model: openai/gpt-fake-large, api_base: http://provider-fake:8090/openai/v1, api_key: os.environ/FAKE_OPENAI_KEY, timeout: 30}
+    model_info: {input_cost_per_token: 0.0000025, output_cost_per_token: 0.00001}
+  - model_name: helpdesk-suggest-weak
+    litellm_params: {model: anthropic/claude-fake-mini, api_base: http://provider-fake:8090/anthropic, api_key: os.environ/FAKE_ANTHROPIC_KEY, timeout: 30}
+    model_info: {input_cost_per_token: 0.0000008, output_cost_per_token: 0.000004}
 
-  - model_name: helpdesk-topics            # F3 Relatório de temas
-    litellm_params:
-      model: anthropic/claude-fake-large
-      api_base: http://provider-fake:8090/anthropic
-      api_key: os.environ/FAKE_ANTHROPIC_KEY
+  # F3 Relatório de temas (uma chamada por lote de 150 tickets) -----------------------------
+  - model_name: helpdesk-topics
+    litellm_params: {model: anthropic/claude-fake-large, api_base: http://provider-fake:8090/anthropic, api_key: os.environ/FAKE_ANTHROPIC_KEY, timeout: 30}
+    model_info: {input_cost_per_token: 0.000003, output_cost_per_token: 0.000015}
+  - model_name: helpdesk-topics-fallback
+    litellm_params: {model: openai/gpt-fake-large, api_base: http://provider-fake:8090/openai/v1, api_key: os.environ/FAKE_OPENAI_KEY, timeout: 30}
+    model_info: {input_cost_per_token: 0.0000025, output_cost_per_token: 0.00001}
+  - model_name: helpdesk-topics-weak
+    litellm_params: {model: anthropic/claude-fake-mini, api_base: http://provider-fake:8090/anthropic, api_key: os.environ/FAKE_ANTHROPIC_KEY, timeout: 30}
+    model_info: {input_cost_per_token: 0.0000008, output_cost_per_token: 0.000004}
 
-  - model_name: helpdesk-extract           # F4 Extrair dados do pedido
-    litellm_params:
-      model: openai/gpt-fake-large
-      api_base: http://provider-fake:8090/openai/v1
-      api_key: os.environ/FAKE_OPENAI_KEY
+  # F4 Extrair dados do pedido (sem modelo fraco: ADR 0006) ---------------------------------
+  - model_name: helpdesk-extract
+    litellm_params: {model: openai/gpt-fake-large, api_base: http://provider-fake:8090/openai/v1, api_key: os.environ/FAKE_OPENAI_KEY, timeout: 4}
+    model_info: {input_cost_per_token: 0.0000025, output_cost_per_token: 0.00001}
+  - model_name: helpdesk-extract-fallback
+    litellm_params: {model: anthropic/claude-fake-large, api_base: http://provider-fake:8090/anthropic, api_key: os.environ/FAKE_ANTHROPIC_KEY, timeout: 4}
+    model_info: {input_cost_per_token: 0.000003, output_cost_per_token: 0.000015}
 
-litellm_settings:
-  # v2: sem retry nem fallback no gateway (o comportamento externo não muda nesta tag).
-  # Timeout, retry com backoff e fallback entram na F06, com ADR.
-  num_retries: 0
+router_settings:
+  # Ordem dos destinos por capacidade: primário → fallback técnico → (modelo fraco).
+  fallbacks:
+    - helpdesk-classify: [helpdesk-classify-fallback, helpdesk-classify-weak]
+    - helpdesk-suggest: [helpdesk-suggest-fallback, helpdesk-suggest-weak]
+    - helpdesk-topics: [helpdesk-topics-fallback, helpdesk-topics-weak]
+    - helpdesk-extract: [helpdesk-extract-fallback]
+  # Retry limitado, só para falhas transitórias, e só aqui (o app usa max_retries=0; ADR 0009).
+  # Timeout não é repetido: o destino seguinte é mais útil do que esperar de novo o mesmo.
+  num_retries: 1
+  retry_policy:
+    InternalServerErrorRetries: 1
+    RateLimitErrorRetries: 1
+    ServiceUnavailableErrorRetries: 1
+    TimeoutErrorRetries: 0
+    BadRequestErrorRetries: 0
+    AuthenticationErrorRetries: 0
+    NotFoundErrorRetries: 0
+  # Sem cooldown: cada requisição tenta o primário de novo; o número de tentativas por destino
+  # fica determinístico e é o que o README declara (circuit breaker está fora de escopo).
+  disable_cooldowns: true
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
