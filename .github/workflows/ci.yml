@@ -22,9 +22,10 @@ jobs:
 
       - name: Sem modelos físicos nem chaves de provider em app/ (a partir do gateway)
         if: ${{ hashFiles('gateway/**') != '' }}
+        # `! cmd` não aciona o `bash -e`; por isso o if explícito.
         run: |
-          ! grep -rnE "gpt-fake|claude-fake" app/
-          ! grep -rnE "FAKE_OPENAI_KEY|FAKE_ANTHROPIC_KEY|sk-fake-openai|sk-ant-fake" app/
+          if grep -rnE "gpt-fake|claude-fake" app/; then echo "::error::nome de modelo físico em app/"; exit 1; fi
+          if grep -rnE "FAKE_OPENAI_KEY|FAKE_ANTHROPIC_KEY|sk-fake-openai|sk-ant-fake" app/; then echo "::error::chave de provider em app/"; exit 1; fi
 
       - uses: actions/setup-python@v5
         if: ${{ hashFiles('metrics/requirements.txt') != '' }}
