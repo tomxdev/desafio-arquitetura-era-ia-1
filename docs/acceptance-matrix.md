@@ -13,8 +13,8 @@
 |---|---|---|---|---|---|
 | AC-DIAG-01 | A seção "Diagnóstico da v1" do README registra as quatro dores, cada uma com o comando executado, o resultado observado e o trecho de `app/` onde está a causa | F01 (final em F08) | revisão: 4 subseções × {comando, observado com status/tempo/`/admin/calls`, `app/helpdesk/<arq>.py:<linha>`}; `grep -n "Diagnóstico da v1" README.md` | `README.md`, `docs/evidence/f01/pain{1..4}-*.txt` | done |
 | AC-DIAG-02 | A tag `v1-coupled` existe no fork, e nela `app/` é idêntico ao do repositório base | F02 | S: `git ls-remote --tags origin \| grep v1-coupled` e `git diff --quiet upstream/main v1-coupled -- app/ && echo OK` | `docs/evidence/f02/release-v1-checks.txt`, `docs/evidence/f02/tags.txt` | done |
-| AC-DIAG-03 | A suíte fixa o corpo das respostas das 4 features (não só o status), roda com o comando documentado e passa na `v1-coupled` e na `v2-decoupled` | F02, F05 | S: checkout de cada tag → `docker compose down -v && docker compose up -d --build --wait && python -m pytest tests/characterization -q`; revisão: asserts de corpo inteiro (golden) nas 4 features | `docs/evidence/f02/pytest-v1.txt`, `docs/evidence/f05/pytest-v2.txt` | in_progress (v1: 17/17; v2 na F05) |
-| AC-DIAG-04 | `git diff v1-coupled v2-decoupled -- tests/characterization/` não mostra diferença | F05 | S: `git diff --exit-code v1-coupled v2-decoupled -- tests/characterization/` | `docs/evidence/f05/release-v2-checks.txt` | pending |
+| AC-DIAG-03 | A suíte fixa o corpo das respostas das 4 features (não só o status), roda com o comando documentado e passa na `v1-coupled` e na `v2-decoupled` | F02, F05 | S: checkout de cada tag → `docker compose down -v && docker compose up -d --build --wait && python -m pytest tests/characterization -q`; revisão: asserts de corpo inteiro (golden) nas 4 features | `docs/evidence/f02/pytest-v1.txt`, `docs/evidence/f05/pytest-v2.txt` | done |
+| AC-DIAG-04 | `git diff v1-coupled v2-decoupled -- tests/characterization/` não mostra diferença | F05 | S: `git diff --exit-code v1-coupled v2-decoupled -- tests/characterization/` | `docs/evidence/f05/release-v2-checks.txt` | done |
 
 ### 1.2 Métrica de acoplamento
 
@@ -31,7 +31,7 @@
 | ID | Critério | Fase | Verificação | Evidência | Status |
 |---|---|---|---|---|---|
 | AC-PLAN-01 | `docs/refactoring-plan.md` contém componentes-alvo, estratégia de cada um, critério de pronto, piloto com medição antes e depois, ≥1 revisão justificada e o registro do handoff para o agente | F04, F05 | revisão por checklist das 6 partes | `docs/refactoring-plan.md`, `docs/evidence/f04/pilot-*.csv`, `docs/evidence/f05/handoff-log.md` | done |
-| AC-PLAN-02 | A tag `v2-decoupled` existe, e nela a aplicação já chama os modelos exclusivamente pelo gateway | F05 | S (checkout da tag): greps de AC-GW-01/02; `/admin/calls` após F1 mostra a chamada; `docker compose logs gateway` registra a requisição; o app não tem URL do provider (`! grep -rn "provider-fake" app/`) | `docs/evidence/f05/{greps.txt,admin-calls.json}` | pending |
+| AC-PLAN-02 | A tag `v2-decoupled` existe, e nela a aplicação já chama os modelos exclusivamente pelo gateway | F05 | S (checkout da tag): greps de AC-GW-01/02; `/admin/calls` após F1 mostra a chamada; `docker compose logs gateway` registra a requisição; o app não tem URL do provider (`! grep -rn "provider-fake" app/`) | `docs/evidence/f05/{greps.txt,admin-calls.json}` | done |
 
 ### 1.4 Gateway
 
@@ -124,7 +124,7 @@
 | ID | Item | Fase | Verificação | Evidência | Status |
 |---|---|---|---|---|---|
 | TC-01 | Docker e Docker Compose v2 | F00 | `docker compose version` | `docs/evidence/f00/host-versions.txt` | done |
-| TC-02 | Git, com as tags publicadas no fork | F02, F05, F09 | `git ls-remote --tags origin` | `docs/evidence/f09/tags.txt` | in_progress (v1-coupled publicada; v2 na F05) |
+| TC-02 | Git, com as tags publicadas no fork | F02, F05, F09 | `git ls-remote --tags origin` | `docs/evidence/f09/tags.txt` | done |
 | TC-03 | AI Gateway self-hosted como serviço `gateway` (não SaaS) | F05 | `docker compose config --services` contém `gateway`; imagem pública | `compose.yaml` | done |
 | TC-04 | App em Python 3.12 com FastAPI | F05–F09 | `docker compose exec app python --version`; `pip show fastapi` | `docs/evidence/f09/matrix-run.md` | pending |
 
@@ -142,7 +142,7 @@
 | ST-08 | `docs/refactoring-plan.md` | F04, F05 | AC-PLAN-01 | `docs/refactoring-plan.md` | done |
 | ST-09 | `docs/adr/` (um arquivo por decisão) | F05–F08 | AC-ADR-01 | `docs/adr/` | in_progress (0001–0003, 0008) |
 | ST-10 | Arquivos extras (Dockerfiles, scripts, testes da main, serviços) declarados no compose e no README | F08 | revisão do README "Como rodar" | `README.md` | pending |
-| ST-11 | Tags marcam estados reais: v1 = app recebido + suíte; v2 = refatorado atrás do gateway com mesmo comportamento | F02, F05 | AC-DIAG-02/03/04, AC-PLAN-02 | `docs/evidence/f02/`, `docs/evidence/f05/` | pending |
+| ST-11 | Tags marcam estados reais: v1 = app recebido + suíte; v2 = refatorado atrás do gateway com mesmo comportamento | F02, F05 | AC-DIAG-02/03/04, AC-PLAN-02 | `docs/evidence/f02/`, `docs/evidence/f05/` | done |
 | ST-12 | Campos adicionais em contratos (se houver) documentados no README | F07, F08 | revisão (ex.: `progress` e `reason` no status da F3) | `README.md` | pending |
 
 ## 6. Seções obrigatórias do README

@@ -359,7 +359,7 @@ gh api -X POST repos/tomxdev/desafio-arquitetura-era-ia-1/rulesets --input .gith
 | F02 | Caracterização + v1 | feature/02-caracterizacao → release/v1-coupled | develop → main | F01 | `tests/characterization/`, tag | suíte verde na v1; `app/` idêntico | **v1-coupled** | done |
 | F03 | Métrica | feature/03-metrica | develop | v1 publicada | `metrics/` + `results/v1-coupled.{csv,png}` | v1.csv = oráculo 1.1; unit tests | — | done |
 | F04 | Plano + piloto | feature/04-plano-piloto | develop | F03 | `docs/refactoring-plan.md`, piloto | suíte verde; métrica antes/depois | — | done |
-| F05 | Gateway + v2 | feature/05-gateway-v2 → release/v2-decoupled | develop → main | F04 | `gateway/`, compose, app refatorado, `results/v2-decoupled.*` | suíte **inalterada** verde; greps; env do app | **v2-decoupled** | pending |
+| F05 | Gateway + v2 | feature/05-gateway-v2 → release/v2-decoupled | develop → main | F04 | `gateway/`, compose, app refatorado, `results/v2-decoupled.*` | suíte **inalterada** verde; greps; env do app | **v2-decoupled** | done |
 | F06 | Governança e resiliência | feature/06-governanca-resiliencia | develop | v2 publicada | budget, rpm, timeout, retry, fallback, troca de modelo | roteiros provados em `/admin/calls` | — | pending |
 | F07 | Fluxos F1–F4 | feature/07-fluxos | develop | F06 | sync/SSE/async, testes da main | tempos pela borda; sem 504 | — | pending |
 | F08 | ADRs, métrica final, README | feature/08-adrs-docs | develop | F07 | `docs/adr/*`, `results/main.*`, README | zona de dor; seções do README | — | pending |
@@ -1163,8 +1163,8 @@ git clean -ndx          # revisar antes de usar -fdx; nunca apagar .env sem quer
 | F03 | done | feature/03-metrica | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/6 | 5c432ea | metrics/results/v1-coupled.*, docs/evidence/f03/ | v1 = oráculo; 12 testes; inclui correções do review do PR #4 |
 | F04 | done | feature/04-plano-piloto | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/7 | 36e1c17 | docs/evidence/f04/ | piloto em classification: 17/17; revisão 1 registrada |
 | F05 | done | feature/05-gateway-v2 | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/8 | 05e9400 | docs/evidence/f05/ | gateway + refatoração via agente (5 alvos, 0 rejeições); juízes independentes 4/4; corrigido bug do `! grep` no CI |
-| F05-REL | in_progress | release/v2-decoupled | (PR para main aberto, aguardando confirmação) | — | tag `v2-decoupled`: — | confirmação humana |
-| F06 | pending | feature/06-governanca-resiliencia | — | — | docs/evidence/f06/ | |
+| F05-REL | done | release/v2-decoupled | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/9 (back-merge #10) | 1ece5e0 | tag `v2-decoupled` → 1ece5e0 (anotada f41185b) | confirmado pelo usuário; review do CodeRabbit: gateway só em 127.0.0.1 |
+| F06 | pending | feature/06-governanca-resiliencia | — | — | docs/evidence/f06/ | incluir: revogar chave antiga do app no seeder (review do PR #9) |
 | F07 | pending | feature/07-fluxos | — | — | docs/evidence/f07/ | |
 | F08 | pending | feature/08-adrs-docs | — | — | docs/evidence/f08/ | |
 | F09 | pending | release/final | — | — | docs/evidence/f09/ | confirmação humana |
