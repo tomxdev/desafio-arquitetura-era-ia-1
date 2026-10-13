@@ -41,3 +41,5 @@ curl -s "localhost:4000/key/info?key=sk-helpdesk-app-0001" -H "Authorization: Be
 # → "max_budget": 100.0, "budget_duration": "30d", "rpm_limit": 600
 grep -c "model: openai/\|model: anthropic/" gateway/config.yaml   # só os dois providers aceitos
 ```
+
+Reexecutado na F08 ([saída](../evidence/f08/adr-evidence.txt)): `max_budget` 100.0, `budget_duration` 30d, `rpm_limit` 600; os 11 deployments são `openai/*` ou `anthropic/*` e nenhum outro.

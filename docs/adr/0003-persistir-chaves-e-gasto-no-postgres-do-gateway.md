@@ -36,3 +36,5 @@ docker compose ps gateway-db gateway                        # healthy
 docker compose logs gateway | grep "chave helpdesk-app"     # criada / já existe
 curl -s localhost:4000/key/info?key=sk-helpdesk-app-0001 -H "Authorization: Bearer sk-litellm-master-0001"
 ```
+
+Reexecutado na F08 ([saída](../evidence/f08/adr-evidence.txt)): `chave helpdesk-app: já existe` depois de reiniciar o gateway (as chaves sobrevivem no `gateway-db`) e `/key/info` com o gasto acumulado.

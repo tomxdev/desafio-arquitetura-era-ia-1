@@ -1,0 +1,7 @@
+$ for f in docs/adr/0[0-9][0-9][1-9]-*.md; do grep -qE "^- Nível: (corporativa|solução|software)$" "$f" || echo "SEM NÍVEL: $f"; done
+$ grep -h "^- Nível:" docs/adr/0[0-9][0-9][1-9]-*.md | sort | uniq -c
+      1 - Nível: corporativa
+      3 - Nível: software
+      5 - Nível: solução
+$ grep -h "^- Status:" docs/adr/0[0-9][0-9][1-9]-*.md | sort | uniq -c
+      9 - Status: aceita

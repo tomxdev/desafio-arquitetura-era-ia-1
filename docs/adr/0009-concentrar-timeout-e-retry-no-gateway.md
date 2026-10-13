@@ -49,3 +49,5 @@ Observado no `/admin/calls` para os três destinos: com os dois providers inteir
 ## Evidência
 
 `bash scripts/verify/fallback.sh` ([saída](../evidence/f06/fallback.txt)): primário em `error_500` → `gpt-fake-large:500 gpt-fake-large:500 claude-fake-large:200`; `openai` em `timeout` → `gpt-fake-large:504` (1 tentativa, cortada em 4 s) seguida de `claude-fake-large:200`, F1 em 5,1 s pela borda.
+
+Reexecutado na F08: [saída](../evidence/f08/fallback.txt) (`RESULTADO: OK`), com as mesmas sequências; F1 com `openai` em `timeout` em 5,1 s.

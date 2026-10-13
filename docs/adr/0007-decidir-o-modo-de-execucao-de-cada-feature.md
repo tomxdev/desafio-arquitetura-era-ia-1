@@ -68,3 +68,5 @@ Uma chamada a LLM demora segundos, custa por token, chega aos poucos e prende co
 | F3 com os dois providers em `error_500` | `failed` com `reason` em 7,7 s (limite: 60 s) |
 | F1 com o primário em `timeout` | `200` via fallback em 5,1 s |
 | Nenhum `504` da borda | nenhum status 504 em todo o roteiro |
+
+Reexecutado na F08: [saída](../evidence/f08/flows.txt) (`RESULTADO: OK`): F1 1,09–1,12 s; F2 1º trecho em 0,86 s e fim em 16,28 s; F3 aceita em 0,07 s, mês com 5.000 tickets e 34 chamadas `topics`; `failed` em 7,74 s; nenhum `504`.

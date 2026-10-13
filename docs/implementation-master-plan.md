@@ -361,8 +361,8 @@ gh api -X POST repos/tomxdev/desafio-arquitetura-era-ia-1/rulesets --input .gith
 | F04 | Plano + piloto | feature/04-plano-piloto | develop | F03 | `docs/refactoring-plan.md`, piloto | suíte verde; métrica antes/depois | — | done |
 | F05 | Gateway + v2 | feature/05-gateway-v2 → release/v2-decoupled | develop → main | F04 | `gateway/`, compose, app refatorado, `results/v2-decoupled.*` | suíte **inalterada** verde; greps; env do app | **v2-decoupled** | done |
 | F06 | Governança e resiliência | feature/06-governanca-resiliencia | develop | v2 publicada | budget, rpm, timeout, retry, fallback, troca de modelo | roteiros provados em `/admin/calls` | — | done |
-| F07 | Fluxos F1–F4 | feature/07-fluxos | develop | F06 | sync/SSE/async, testes da main | tempos pela borda; sem 504 | — | pending |
-| F08 | ADRs, métrica final, README | feature/08-adrs-docs | develop | F07 | `docs/adr/*`, `results/main.*`, README | zona de dor; seções do README | — | pending |
+| F07 | Fluxos F1–F4 | feature/07-fluxos | develop | F06 | sync/SSE/async, testes da main | tempos pela borda; sem 504 | — | done |
+| F08 | ADRs, métrica final, README | feature/08-adrs-docs | develop | F07 | `docs/adr/*`, `results/main.*`, README | zona de dor; seções do README | — | in_progress |
 | F09 | Validação e release final | release/final | main | F08 | matriz 100% `done` | clone limpo + todos os critérios | **main final** | pending |
 
 ### 4.1 Grafo de dependências e caminho crítico
@@ -1165,8 +1165,8 @@ git clean -ndx          # revisar antes de usar -fdx; nunca apagar .env sem quer
 | F05 | done | feature/05-gateway-v2 | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/8 | 05e9400 | docs/evidence/f05/ | gateway + refatoração via agente (5 alvos, 0 rejeições); juízes independentes 4/4; corrigido bug do `! grep` no CI |
 | F05-REL | done | release/v2-decoupled | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/9 (back-merge #10) | 1ece5e0 | tag `v2-decoupled` → 1ece5e0 (anotada f41185b) | confirmado pelo usuário; review do CodeRabbit: gateway só em 127.0.0.1 |
 | F06 | done | feature/06-governanca-resiliencia | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/11 | 691151c | docs/evidence/f06/ | governance/fallback/model_swap OK a partir de down -v; rotação de chave OK; ADRs 0004/0005/0006/0009 |
-| F07 | in_progress | feature/07-fluxos | — | — | docs/evidence/f07/ | flows.sh OK (F1 1,09 s; F2 1º trecho 0,85 s; F3 aceite 0,07 s, mês 5000; failed 7,7 s); contract 8 passed |
-| F08 | pending | feature/08-adrs-docs | — | — | docs/evidence/f08/ | |
+| F07 | done | feature/07-fluxos | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/12 | dcdb758 | docs/evidence/f07/ | flows.sh OK (F1 1,09 s; F2 1º trecho 0,85 s; F3 aceite 0,07 s, mês 5000; failed 7,7 s); contract 8 passed |
+| F08 | in_progress | feature/08-adrs-docs | — | — | docs/evidence/f08/ | main só com `schemas` na zona de dor (exceção no ADR 0008); 9 ADRs aceitos nos 3 níveis; README com 10 seções; roteiros reexecutados OK; corrigida colisão de `conftest` (R18) |
 | F09 | pending | release/final | — | — | docs/evidence/f09/ | confirmação humana |
 
 ---
@@ -1208,6 +1208,7 @@ git clean -ndx          # revisar antes de usar -fdx; nunca apagar .env sem quer
 | R14 | Mensagens 422 do pydantic mudarem num rebuild da v2 (`app/requirements.txt` não fixa `pydantic`) e quebrarem a suíte idêntica | média | alto | F05 fixa `pydantic==2.14.1` e `pydantic_core==2.50.1` (versões da imagem v1) |
 | R16 | Clientes Python no Windows com `localhost:4000` ganham ~2 s por conexão (o gateway só escuta em 127.0.0.1 e o httpx tenta `::1` antes) | certo neste host | baixo (medições enganosas) | usar `127.0.0.1` em clientes Python; curl e app→gateway não são afetados |
 | R17 | Requisições em andamento no gateway continuam depois que o app reinicia (ou o cliente desiste) e poluem o `/admin/calls` de cenários seguintes | média | médio (falso negativo em roteiros) | testes de contrato por último no CI; esperar ~20 s ou reiniciar antes de roteiros de contagem |
+| R18 | `pytest` com as suítes de caracterização e de contrato juntas falhava na coleta (dois módulos `conftest`); o CI rodava separado e não detectava | ocorreu até a F07 | médio (avaliador roda `pytest` e vê erro) | `tests/contract/__init__.py`; `python -m pytest -q` verde na F08 |
 | R11 | CRLF em clones Windows (`core.autocrlf=true`) quebra scripts/configs em containers | certo neste host | médio | `.gitattributes` `eol=lf` + config local (F00) |
 
 ### 8.3 Bloqueios ativos
