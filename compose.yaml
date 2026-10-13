@@ -28,3 +28,50 @@ services:
     depends_on:
       provider-fake:
         condition: service_healthy
+      gateway:
+        condition: service_healthy
+
+  # AI Gateway (ADR 0001): único ponto que conhece providers, modelos físicos e suas chaves.
+  gateway:
+    image: ghcr.io/berriai/litellm:v1.102.1
+    entrypoint: ["bash", "/etc/litellm/entrypoint.sh"]
+    environment:
+      DATABASE_URL: postgresql://litellm:${GATEWAY_DB_PASSWORD}@gateway-db:5432/litellm
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
+      HELPDESK_GATEWAY_KEY: ${HELPDESK_GATEWAY_KEY}
+      FAKE_OPENAI_KEY: ${FAKE_OPENAI_KEY}
+      FAKE_ANTHROPIC_KEY: ${FAKE_ANTHROPIC_KEY}
+      STORE_MODEL_IN_DB: "False"
+    volumes:
+      - ./gateway:/etc/litellm:ro
+    ports:
+      - "4000:4000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os, urllib.request; assert os.path.exists('/tmp/keys-ready'); urllib.request.urlopen('http://127.0.0.1:4000/health/liveliness')"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+      start_period: 180s
+    depends_on:
+      gateway-db:
+        condition: service_healthy
+      provider-fake:
+        condition: service_healthy
+
+  # Banco do gateway (ADR 0003): chaves virtuais, gasto e orçamento.
+  gateway-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: litellm
+      POSTGRES_USER: litellm
+      POSTGRES_PASSWORD: ${GATEWAY_DB_PASSWORD}
+    volumes:
+      - gateway-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U litellm -d litellm"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  gateway-db:
