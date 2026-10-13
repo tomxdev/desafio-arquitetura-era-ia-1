@@ -123,7 +123,7 @@
 
 | ID | Item | Fase | Verificação | Evidência | Status |
 |---|---|---|---|---|---|
-| TC-01 | Docker e Docker Compose v2 | F00 | `docker compose version` | `docs/evidence/f00/host-versions.txt` | pending |
+| TC-01 | Docker e Docker Compose v2 | F00 | `docker compose version` | `docs/evidence/f00/host-versions.txt` | done |
 | TC-02 | Git, com as tags publicadas no fork | F02, F05, F09 | `git ls-remote --tags origin` | `docs/evidence/f09/tags.txt` | pending |
 | TC-03 | AI Gateway self-hosted como serviço `gateway` (não SaaS) | F05 | `docker compose config --services` contém `gateway`; imagem pública | `compose.yaml` | pending |
 | TC-04 | App em Python 3.12 com FastAPI | F05–F09 | `docker compose exec app python --version`; `pip show fastapi` | `docs/evidence/f09/matrix-run.md` | pending |
@@ -132,7 +132,7 @@
 
 | ID | Item | Fase | Verificação | Evidência | Status |
 |---|---|---|---|---|---|
-| ST-01 | Fork público no GitHub com a versão final na `main` | F00, F09 | `gh repo view tomxdev/desafio-arquitetura-era-ia-1 --json visibility,isFork,parent` | `docs/evidence/f09/repo-visibility.txt` | pending |
+| ST-01 | Fork público no GitHub com a versão final na `main` | F00, F09 | `gh repo view tomxdev/desafio-arquitetura-era-ia-1 --json visibility,isFork,parent` | `docs/evidence/f09/repo-visibility.txt` | in_progress (fork público criado na F00; `main` final na F09) |
 | ST-02 | `README.md` substituído pelo do aluno | F01, F08 | revisão | `README.md` | pending |
 | ST-03 | `compose.yaml` estendido sobe tudo com um comando | F05–F09 | AC-RDM-02 | `docs/evidence/f09/fresh-clone.log` | pending |
 | ST-04 | `.env.example` estendido (basta copiar) | F05, F06 | AC-RDM-02 | `.env.example` | pending |

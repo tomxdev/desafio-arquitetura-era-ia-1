@@ -353,7 +353,7 @@ gh api -X POST repos/tomxdev/desafio-arquitetura-era-ia-1/rulesets --input .gith
 
 | Fase | Objetivo | Branch | PR alvo | Depende de | Entregáveis | Testes/gate principal | Marco | Status |
 |---|---|---|---|---|---|---|---|---|
-| F00 | Bootstrap, fork, CI, ambiente | feature/00-bootstrap | develop | — | fork, remotes, develop, docs do plano, CI, venv | compose sobe; `/health` 200; CI verde | — | pending |
+| F00 | Bootstrap, fork, CI, ambiente | feature/00-bootstrap | develop | — | fork, remotes, develop, docs do plano, CI, venv | compose sobe; `/health` 200; CI verde | — | done |
 | F01 | Diagnóstico v1 | feature/01-diagnostico-v1 | develop | F00 | README "Diagnóstico da v1", `docs/evidence/f01/` | 4 dores reproduzidas; `app/` = upstream | — | pending |
 | F02 | Caracterização + v1 | feature/02-caracterizacao → release/v1-coupled | develop → main | F01 | `tests/characterization/`, tag | suíte verde na v1; `app/` idêntico | **v1-coupled** | pending |
 | F03 | Métrica | feature/03-metrica | develop | v1 publicada | `metrics/` + `results/v1-coupled.{csv,png}` | v1.csv = oráculo 1.1; unit tests | — | pending |
@@ -420,6 +420,7 @@ Caminho crítico: **todo o grafo é sequencial**. Os gates mais caros de reverte
 5. `cd $REPO && git remote add upstream https://github.com/devfullcycle/desafio-arquitetura-era-ia-1.git && git fetch upstream && git remote -v`
    - **[FATO F00]** o Git do host tem `core.autocrlf=true`; o clone sai com CRLF, o que quebra scripts e configs montados em containers Linux. Correção local: `git config core.autocrlf false && git config core.eol lf && git rm -rq --cached . && git reset -q --hard`. Versionar `.gitattributes` com `* text=auto eol=lf` (`git ls-files --eol` confirmou que o índice já é todo LF, então nada é renormalizado).
 6. Validar: `git rev-parse main upstream/main` (iguais), `gh repo view --json defaultBranchRef -q .defaultBranchRef.name` = `main`.
+   - **[FATO F00]** num fork com remote `upstream`, o `gh` mira o repositório pai por padrão (`gh pr create` falha com "No commits between"). Rodar `gh repo set-default tomxdev/desafio-arquitetura-era-ia-1` uma vez por clone.
 7. Configurar merges do repo (seção 3.7, `gh repo edit ...`).
 8. `git switch -c develop main && git push -u origin develop`.
 9. `git switch -c feature/00-bootstrap develop`.
@@ -1153,7 +1154,7 @@ git clean -ndx          # revisar antes de usar -fdx; nunca apagar .env sem quer
 
 | Fase | Status | Branch | PR (URL) | Merge SHA | Evidência | Observações |
 |---|---|---|---|---|---|---|
-| F00 | in_progress | feature/00-bootstrap | — | — | docs/evidence/f00/ | fork, clone, develop, venv e smoke ok; push bloqueado por B1 |
+| F00 | done | feature/00-bootstrap | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/1 | 5603bf0 | docs/evidence/f00/ | CI static+e2e verdes; proteção develop + ruleset de tags `v*` (id 25008762) aplicados |
 | F01 | pending | feature/01-diagnostico-v1 | — | — | docs/evidence/f01/ | |
 | F02 | pending | feature/02-caracterizacao | — | — | docs/evidence/f02/ | |
 | F02-REL | pending | release/v1-coupled | — | — | tag `v1-coupled`: — | confirmação humana |
@@ -1205,7 +1206,7 @@ git clean -ndx          # revisar antes de usar -fdx; nunca apagar .env sem quer
 
 | ID | Bloqueio | Ação | Dono |
 |---|---|---|---|
-| B1 | Token gh sem escopo `workflow` | `gh auth refresh -h github.com -s workflow` | usuário |
+| ~~B1~~ | ~~Token gh sem escopo `workflow`~~ (resolvido em 2026-10-13) | `gh auth refresh -h github.com -s workflow` | usuário |
 
 ---
 
