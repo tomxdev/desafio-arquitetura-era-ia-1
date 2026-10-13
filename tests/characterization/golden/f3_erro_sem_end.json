@@ -1,0 +1,19 @@
+{
+  "status": 422,
+  "content_type": "application/json",
+  "body": {
+    "detail": [
+      {
+        "type": "missing",
+        "loc": [
+          "body",
+          "end"
+        ],
+        "msg": "Field required",
+        "input": {
+          "start": "2026-08-01"
+        }
+      }
+    ]
+  }
+}

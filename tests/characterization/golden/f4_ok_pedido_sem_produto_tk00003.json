@@ -1,0 +1,9 @@
+{
+  "status": 200,
+  "content_type": "application/json",
+  "body": {
+    "ticket_id": "TK-00003",
+    "order_number": "#117367",
+    "product": null
+  }
+}
