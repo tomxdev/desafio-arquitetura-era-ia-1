@@ -17,6 +17,7 @@
 
 - **Status de fase/item:** `pending` · `in_progress` · `blocked` · `done`.
 - **Shell:** todos os comandos são para **Git Bash** no Windows (ou bash no Linux/CI). No PowerShell, `curl` é alias de `Invoke-WebRequest`; use `curl.exe` ou o Git Bash.
+- **[FATO F01] Corpos com acento:** no Windows, `curl -d '{...não...}'` chega corrompido e a app responde `400 There was an error parsing the body`. Sempre enviar o corpo de arquivo: `--data-binary @scripts/diagnostics/payloads/<arquivo>.json`. Os `-d '...'` deste plano são ilustrativos.
 - **Raiz do repo:** `C:\dev\desafio-arquitetura-era-ia-1` (no Git Bash: `/c/dev/desafio-arquitetura-era-ia-1`), daqui em diante `$REPO`.
 - **Fork:** `tomxdev/desafio-arquitetura-era-ia-1` · **upstream:** `devfullcycle/desafio-arquitetura-era-ia-1`.
 - **Evidências:** `docs/evidence/fNN/` no fork (texto: `.txt`, `.json`, `.csv`, `.log`; nada binário além dos gráficos de métrica).
@@ -1155,7 +1156,7 @@ git clean -ndx          # revisar antes de usar -fdx; nunca apagar .env sem quer
 | Fase | Status | Branch | PR (URL) | Merge SHA | Evidência | Observações |
 |---|---|---|---|---|---|---|
 | F00 | done | feature/00-bootstrap | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/1 | 5603bf0 | docs/evidence/f00/ | CI static+e2e verdes; proteção develop + ruleset de tags `v*` (id 25008762) aplicados |
-| F01 | pending | feature/01-diagnostico-v1 | — | — | docs/evidence/f01/ | |
+| F01 | in_progress | feature/01-diagnostico-v1 | — | — | docs/evidence/f01/ | 4 dores + large×mini reproduzidas; PR pendente |
 | F02 | pending | feature/02-caracterizacao | — | — | docs/evidence/f02/ | |
 | F02-REL | pending | release/v1-coupled | — | — | tag `v1-coupled`: — | confirmação humana |
 | F03 | pending | feature/03-metrica | — | — | metrics/results/v1-coupled.* | |
@@ -1178,10 +1179,10 @@ git clean -ndx          # revisar antes de usar -fdx; nunca apagar .env sem quer
 | D1 | Semear a virtual key: entrypoint do gateway (a) vs. serviço `gateway-init` (b) | F05 | testar (a) com `up --wait`; se inviável, (b) + ADR | pending |
 | D2 | `/key/generate` aceita `key` fixo na versão pinada? | F05 | chamada de teste | pending |
 | D3 | Campos de preço por token no `model_list` da versão pinada | F06 | `spend > 0` em `/key/info` | pending |
-| D4 | Mini como último recurso em F1, F2, F3 (F4: não, por hipótese) | F06 | `docs/evidence/f01/models-compare/summary.md` | pending |
+| D4 | Mini como último recurso em F1, F2, F3 (F4: não, por hipótese) | F06 | `docs/evidence/f01/models-compare/summary.md`: classify e topics idênticos ao large na amostra; extract erra 9/40 (4 com nota fiscal como pedido, formato válido); suggest ~44% do tamanho | evidência pronta (decisão na F06) |
 | D5 | Valores de timeout por capacidade e `num_retries` | F06 | medições + limites de 3 s / 15 s / 60 s | pending |
 | D6 | LiteLLM esconde `midstream_error` com fallback no meio do stream? | F07 | teste com `midstream_error` no primário da F2 | pending |
-| D7 | Período curto da F3 na caracterização (≤ 30 s pela borda) | F02 | tempo medido na F01 | pending |
+| D7 | Período curto da F3 na caracterização (≤ 30 s pela borda) | F02 | tempo medido na F01 | **resolvida**: `2026-08-01`→`2026-08-01` = 137 tickets, 1 lote, 9,85 s pela borda |
 | D8 | `config.py` na main: módulo próprio vs. ponto de composição | F04/F05 | responsabilidade + métrica; ADR 0008 | pending |
 | D9 | Onde moram exceções de domínio sem cair na zona de dor | F05/F07 | idem | pending |
 | D10 | Classe abstrata indireta e imports em `TYPE_CHECKING` na régua | F03 | interpretação literal + ADR 0008 | pending |
@@ -1200,6 +1201,8 @@ git clean -ndx          # revisar antes de usar -fdx; nunca apagar .env sem quer
 | R8 | CI lento/instável com LiteLLM + Postgres | média | baixo | cache, timeout maior, evidência local |
 | R9 | Docker/Drive: workspace em Google Drive | — | — | mitigado por U1 (clone em `C:\dev`) |
 | R10 | gh sem escopo `workflow` | certo | bloqueia a F00 | ação humana na F00 |
+| R12 | Acentos em `curl -d` no Windows corrompem o corpo (400) | certo neste host | médio (falso negativo em testes/roteiros) | payloads em arquivo + `--data-binary @arq`; testes em Python (httpx) |
+| R13 | Retry do SDK cria chamadas zumbis minutos depois do 504 (observado: +5 min) | certo na v1 | alto (custo, carga) | `max_retries=0` + timeout explícito no app (F05/F06) |
 | R11 | CRLF em clones Windows (`core.autocrlf=true`) quebra scripts/configs em containers | certo neste host | médio | `.gitattributes` `eol=lf` + config local (F00) |
 
 ### 8.3 Bloqueios ativos
