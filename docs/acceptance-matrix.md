@@ -39,10 +39,10 @@
 |---|---|---|---|---|---|
 | AC-GW-01 | `grep -rE "gpt-fake\|claude-fake" app/` não retorna nada na `main` | F05 (mantido até F09) | S: `! grep -rE "gpt-fake\|claude-fake" app/` (também no CI `static`) | `docs/evidence/f05/greps.txt`, `docs/evidence/f09/matrix-run.md` | in_progress (v2 ok; manter até a main) |
 | AC-GW-02 | `grep -rE "FAKE_OPENAI_KEY\|FAKE_ANTHROPIC_KEY\|sk-fake-openai\|sk-ant-fake" app/` vazio; `docker compose exec app env` sem as chaves; a definição do `app` em `docker compose config` não recebe essas chaves por variável, `env_file` ou arquivo montado | F05 | S: grep; `docker compose exec app env \| grep -E "FAKE_\|sk-fake\|sk-ant"` (vazio); `docker compose config --format json` → bloco `app` sem `env_file`, sem as chaves, volumes só `./data` | `docs/evidence/f05/{greps.txt,app-env.txt,compose-config-app.json}` | in_progress (v2 ok; manter até a main) |
-| AC-GW-03 | Seguindo o README, trocar o modelo físico de uma capacidade exige alterar só a config do gateway e reiniciar só o `gateway`; a próxima chamada aparece em `/admin/calls` com o novo modelo, e o `app` não foi reiniciado | F06 | S: `bash scripts/verify/model_swap.sh` (edita `gateway/config.yaml`, `docker compose restart gateway`, chama a feature, confere o modelo em `/admin/calls`, compara `StartedAt` do app antes/depois, reverte) | `docs/evidence/f06/model-swap.txt` | pending |
-| AC-GW-04 | O roteiro de governança do README mostra uma recusa por orçamento e outra por limite de requisições, e o número de chamadas em `/admin/calls` não aumenta com as recusas | F06 | S: `bash scripts/verify/governance.sh` (contagens antes/depois de cada recusa) | `docs/evidence/f06/governance.txt` | pending |
-| AC-GW-05 | Com o provider primário de uma capacidade em `error_500`, a feature responde com sucesso, e `/admin/calls` mostra as tentativas no primário (≤ máximo declarado no README) seguidas do sucesso no destino equivalente do outro provider | F06 | S: `bash scripts/verify/fallback.sh` (as 4 capacidades) | `docs/evidence/f06/fallback-*.json` | pending |
-| AC-GW-06 | Com os dois `large` em `error_500`, cada uma das 4 features se comporta exatamente como declarado na tabela de fallback do README | F06 (revalidado em F07) | S: `{"provider":"openai","model":"gpt-fake-large","mode":"error_500"}` + idem `claude-fake-large`; chamar F1–F4 pela borda; comparar status/corpo/modelos em `/admin/calls` com a tabela | `docs/evidence/f06/no-large.json`, `docs/evidence/f07/no-large-final.json` | pending |
+| AC-GW-03 | Seguindo o README, trocar o modelo físico de uma capacidade exige alterar só a config do gateway e reiniciar só o `gateway`; a próxima chamada aparece em `/admin/calls` com o novo modelo, e o `app` não foi reiniciado | F06 | S: `bash scripts/verify/model_swap.sh` (edita `gateway/config.yaml`, `docker compose restart gateway`, chama a feature, confere o modelo em `/admin/calls`, compara `StartedAt` do app antes/depois, reverte) | `docs/evidence/f06/model-swap.txt` | done |
+| AC-GW-04 | O roteiro de governança do README mostra uma recusa por orçamento e outra por limite de requisições, e o número de chamadas em `/admin/calls` não aumenta com as recusas | F06 | S: `bash scripts/verify/governance.sh` (contagens antes/depois de cada recusa) | `docs/evidence/f06/governance.txt` | done |
+| AC-GW-05 | Com o provider primário de uma capacidade em `error_500`, a feature responde com sucesso, e `/admin/calls` mostra as tentativas no primário (≤ máximo declarado no README) seguidas do sucesso no destino equivalente do outro provider | F06 | S: `bash scripts/verify/fallback.sh` (as 4 capacidades) | `docs/evidence/f06/fallback-*.json` | done |
+| AC-GW-06 | Com os dois `large` em `error_500`, cada uma das 4 features se comporta exatamente como declarado na tabela de fallback do README | F06 (revalidado em F07) | S: `{"provider":"openai","model":"gpt-fake-large","mode":"error_500"}` + idem `claude-fake-large`; chamar F1–F4 pela borda; comparar status/corpo/modelos em `/admin/calls` com a tabela | `docs/evidence/f06/no-large.json`, `docs/evidence/f07/no-large-final.json` | in_progress (OK na F06; revalidar com os fluxos da F07) |
 
 ### 1.5 Fluxos de chamada (medidos pela borda, `localhost:8000`)
 
@@ -52,7 +52,7 @@
 | AC-FLOW-02 | `curl -N` na F2 mostra o primeiro trecho em até 1,5 s, e o primeiro trecho chega antes da metade do tempo total | F07 | S: `python scripts/verify/measure_sse.py` (first_chunk_s, total_s) + `curl -N` com timestamps por linha | `docs/evidence/f07/f2-sse-timing.txt` | pending |
 | AC-FLOW-03 | O pedido da F3 para `2026-08-01`–`2026-08-31` responde em até 1 s, e o relatório obtido depois tem `total_tickets` = 5000, com as chamadas `topics` registradas em `/admin/calls` | F07 | S: POST com `-w %{time_total}` (≤ 1 s, 202); polling até 303; GET do resultado → `total_tickets == 5000`; `/admin/calls?last=100` filtrado por `task=topics` (34 chamadas esperadas [HIPÓTESE], mais retries se houver) | `docs/evidence/f07/{f3-accept.txt,f3-poll.log,f3-result.json,f3-admin-calls-topics.json}` | pending |
 | AC-FLOW-04 | Com os dois providers inteiros em `error_500`, um novo pedido da F3 chega a estado de falha visível ao cliente, com motivo, em até 60 s | F07 | S: `{"provider":"openai","mode":"error_500"}` + `{"provider":"anthropic","mode":"error_500"}`; POST; polling com timestamps até `{"state":"failed","reason":...}`; Δt ≤ 60 s | `docs/evidence/f07/f3-both-down.txt` | pending |
-| AC-FLOW-05 | Com o provider primário da F1 em `timeout`, a F1 responde (sucesso via fallback ou erro explícito) em até 15 s | F06/F07 | S: `{"provider":"openai","mode":"timeout"}` (ou o primário declarado); `curl -w '%{http_code} %{time_total}'` ≤ 15 s | `docs/evidence/f07/f1-timeout.txt` | pending |
+| AC-FLOW-05 | Com o provider primário da F1 em `timeout`, a F1 responde (sucesso via fallback ou erro explícito) em até 15 s | F06/F07 | S: `{"provider":"openai","mode":"timeout"}` (ou o primário declarado); `curl -w '%{http_code} %{time_total}'` ≤ 15 s | `docs/evidence/f07/f1-timeout.txt` | in_progress (F06: F1 em 5,1 s via fallback; revalidar na F07) |
 | AC-FLOW-06 | Nenhuma das verificações acima produz `504` da borda | F07, F09 | S: `bash scripts/verify/flows.sh` agrega todos os status e falha se encontrar 504 da borda (corpo HTML do nginx) | `docs/evidence/f07/no-504.txt` | pending |
 | AC-FLOW-07 | Cada modo segue o contrato do padrão do req. 6; se a F2 usa streaming, com o primário dela em `midstream_error` o cliente recebe um evento `error` no formato de Contratos sugeridos | F07 | S: `curl -sN` na F2 com `{"provider":"anthropic","mode":"midstream_error"}` (ou o primário declarado) → `Content-Type: text/event-stream`, linhas `data: {"chunk":...}`, `event: error` + `data: {"ticket_id":...,"message":...}` e fim do stream; F3: 202/Location/Retry-After, 200 com `state`, 303 com Location; `pytest tests/contract -q` | `docs/evidence/f07/{f2-midstream.txt,f3-poll.log}`, `tests/contract/` | pending |
 
@@ -62,7 +62,7 @@
 |---|---|---|---|---|---|
 | AC-ADR-01 | `docs/adr/` contém os ADRs mínimos do req. 7, cada um com a linha `Nível:` preenchida | F08 | S: loop de `grep -E "^- Nível: (corporativa\|solução\|software)$"`; checklist dos 6 temas (gateway, capacidades, execução, fallback, governança, métrica) | `docs/evidence/f08/adr-levels.txt` | pending |
 | AC-ADR-02 | Pelo menos um ADR em cada nível (corporativa, solução, software) | F08 | S: `grep -h "^- Nível:" docs/adr/0*.md \| sort \| uniq -c` → 3 valores | `docs/evidence/f08/adr-levels.txt` | pending |
-| AC-ADR-03 | O ADR de fallback traz, para cada feature, a decisão sobre o modelo fraco e a evidência observada no provider simulado que a sustenta | F06, F08 | revisão: 4 seções, cada uma citando `docs/evidence/f01/models-compare/*` e o resultado de AC-GW-06 | `docs/adr/0006-*.md` | pending |
+| AC-ADR-03 | O ADR de fallback traz, para cada feature, a decisão sobre o modelo fraco e a evidência observada no provider simulado que a sustenta | F06, F08 | revisão: 4 seções, cada uma citando `docs/evidence/f01/models-compare/*` e o resultado de AC-GW-06 | `docs/adr/0006-*.md` | done |
 | AC-ADR-04 | O ADR de execução tem uma seção por feature, cada uma citando as características do contrato que levaram à decisão, e o comportamento implementado bate com ele | F07, F08 | revisão + AC-FLOW-01..07 verdes | `docs/adr/0007-*.md` | pending |
 
 ### 1.7 README e consistência geral
@@ -72,7 +72,7 @@
 | AC-RDM-01 | O README contém todas as seções listadas em Entregável | F08 | S: loop das 10 seções (F08, seção 8) | `docs/evidence/f08/readme-sections.txt` | pending |
 | AC-RDM-02 | `cp .env.example .env && docker compose up -d --build --wait` na `main` sobe tudo, e `curl -s localhost:8000/health` logo em seguida retorna 200, sem passos manuais | F09 | S: clone limpo da `main` | `docs/evidence/f09/fresh-clone.log` | pending |
 | AC-RDM-03 | `provider-fake/`, `edge/` e `data/` não foram alterados | todas (CI `static`), F09 | S: `git remote add upstream https://github.com/devfullcycle/desafio-arquitetura-era-ia-1.git; git fetch -q upstream main && git fetch -q origin && git diff --quiet upstream/main origin/main -- provider-fake/ edge/ data/` (num clone limpo, `upstream` e `main` local não existem) | `docs/evidence/f09/matrix-run.md` | pending |
-| AC-RDM-04 | Todo serviço do compose além de `provider-fake`, `edge`, `app` e `gateway` tem um ADR que o justifica a partir de um requisito | F05, F08 | S: `docker compose config --services` × ADRs (ex.: `gateway-db` → ADR 0003; `gateway-init` → ADR 0010, se existir) | `docs/evidence/f08/services-vs-adr.txt` | in_progress (gateway-db → ADR 0003) |
+| AC-RDM-04 | Todo serviço do compose além de `provider-fake`, `edge`, `app` e `gateway` tem um ADR que o justifica a partir de um requisito | F05, F08 | S: `docker compose config --services` × ADRs (ex.: `gateway-db` → ADR 0003; `gateway-init` → ADR 0010, se existir) | `docs/evidence/f08/services-vs-adr.txt` | done (único serviço extra: gateway-db → ADR 0003; revalidar na F08) |
 
 ## 2. Requisitos (tarefas que não aparecem literalmente nos critérios)
 
@@ -93,11 +93,11 @@
 | RQ-4.3 | Na v2, um modelo `large` por trás de cada capacidade; mesmas rotas e modos | F05 | `gateway/config.yaml` na tag; suíte verde | `docs/evidence/f05/` | done |
 | RQ-5.1 | Gateway como serviço `gateway`, config versionada em `gateway/` | F05 | `docker compose config --services`; `ls gateway/` | `compose.yaml`, `gateway/` | done |
 | RQ-5.2 | App usa chave do próprio gateway (virtual key ou equivalente), criada sem passo manual | F05 | S: `up --wait` do zero e F1 200 | `docs/evidence/f05/` | done |
-| RQ-5.3 | Timeout explícito, retry limitado com backoff, fallback técnico para **toda** capacidade | F06 | `gateway/config.yaml` + `fallback.sh` | `docs/evidence/f06/` | pending |
-| RQ-5.4 | Número máximo de tentativas por destino (primário, fallback técnico, fraco) declarado no README | F06 | README "Tabela de capacidades" × `/admin/calls` | `README.md`, `docs/evidence/f06/fallback-*.json` | pending |
-| RQ-5.5 | Preços dos modelos declarados no gateway (senão o orçamento nunca estoura) | F06 | `/key/info` com `spend > 0` | `docs/evidence/f06/key-info.json` | pending |
-| RQ-5.6 | Retries não multiplicados entre SDK/gateway/app | F06 | `/admin/calls` com contagem = declarada | `docs/evidence/f06/fallback-*.json` | pending |
-| RQ-5.7 | Cada mecanismo: ADR diz onde ele mora (gateway ou app) | F06, F08 | ADR 0009 | `docs/adr/0009-*.md` | pending |
+| RQ-5.3 | Timeout explícito, retry limitado com backoff, fallback técnico para **toda** capacidade | F06 | `gateway/config.yaml` + `fallback.sh` | `docs/evidence/f06/` | done |
+| RQ-5.4 | Número máximo de tentativas por destino (primário, fallback técnico, fraco) declarado no README | F06 | README "Tabela de capacidades" × `/admin/calls` | `README.md`, `docs/evidence/f06/fallback-*.json` | done |
+| RQ-5.5 | Preços dos modelos declarados no gateway (senão o orçamento nunca estoura) | F06 | `/key/info` com `spend > 0` | `docs/evidence/f06/key-info.json` | done |
+| RQ-5.6 | Retries não multiplicados entre SDK/gateway/app | F06 | `/admin/calls` com contagem = declarada | `docs/evidence/f06/fallback-*.json` | done |
+| RQ-5.7 | Cada mecanismo: ADR diz onde ele mora (gateway ou app) | F06, F08 | ADR 0009 | `docs/adr/0009-*.md` | done |
 | RQ-6.1 | F2 continua chegando até completar (`event: end`) | F07 | `measure_sse.py` | `docs/evidence/f07/f2-sse-timing.txt` | pending |
 | RQ-6.2 | Async: status `200` com `pending`/`running`/`failed` (com motivo); `303` em `done`; nunca preso em `running` | F07 | `tests/contract` + polling | `docs/evidence/f07/f3-poll.log` | pending |
 | RQ-6.3 | Feature síncrona com timeout explícito; responde em ≤ 15 s com provider travado | F07 | F1 e F4 com primário em `timeout` | `docs/evidence/f07/f1-timeout.txt`, `f4-timeout.txt` | pending |
@@ -116,7 +116,7 @@
 | RS-05 | Mesma régua de métrica nas três medições | F03, F05, F08 | mesmo `metrics/coupling.py` (sem mudança de régua entre medições: `git log -p metrics/coupling.py` revisado) | `docs/evidence/f09/metric-repro.txt` | in_progress (script único desde a F03) |
 | RS-06 | Avaliação sem provider real nem serviço externo além das imagens públicas do compose | F09 | clone limpo sem rede para APIs reais; `.env.example` só com chaves fake | `docs/evidence/f09/fresh-clone.log` | pending |
 | RS-07 | Serviço adicional (além de `app` e `gateway`) tem ADR justificando por requisito | F05, F08 | AC-RDM-04 | `docs/evidence/f08/services-vs-adr.txt` | in_progress (gateway-db → ADR 0003) |
-| RS-08 | Limitação real do gateway documentada no ADR e resolvida na aplicação | F06, F07 | revisão dos ADRs 0006/0009 (seção "Limitações") | `docs/adr/` | pending |
+| RS-08 | Limitação real do gateway documentada no ADR e resolvida na aplicação | F06, F07 | revisão dos ADRs 0006/0009 (seção "Limitações") | `docs/adr/` | in_progress (timeout não cancela a geração no provider: ADR 0009) |
 | RS-09 | Fora de escopo não implementado sem necessidade (cache, RAG, circuit breaker, guardrails, evals, auth) | todas | revisão: `grep -rniE "cache\|circuit\|rag" app/ gateway/` justificado ou vazio | `docs/evidence/f09/matrix-run.md` | pending |
 
 ## 4. Tecnologias obrigatórias
@@ -135,12 +135,12 @@
 | ST-01 | Fork público no GitHub com a versão final na `main` | F00, F09 | `gh repo view tomxdev/desafio-arquitetura-era-ia-1 --json visibility,isFork,parent` | `docs/evidence/f09/repo-visibility.txt` | in_progress (fork público criado na F00; `main` final na F09) |
 | ST-02 | `README.md` substituído pelo do aluno | F01, F08 | revisão | `README.md` | in_progress (F01: README próprio; final na F08) |
 | ST-03 | `compose.yaml` estendido sobe tudo com um comando | F05–F09 | AC-RDM-02 | `docs/evidence/f09/fresh-clone.log` | in_progress |
-| ST-04 | `.env.example` estendido (basta copiar) | F05, F06 | AC-RDM-02 | `.env.example` | in_progress (variáveis do gateway) |
-| ST-05 | `gateway/` com capacidades, fallback, chaves, orçamentos e limites | F05, F06 | revisão de `gateway/config.yaml` + seed | `gateway/` | in_progress (capacidades + chave do app; governança/fallback na F06) |
+| ST-04 | `.env.example` estendido (basta copiar) | F05, F06 | AC-RDM-02 | `.env.example` | done |
+| ST-05 | `gateway/` com capacidades, fallback, chaves, orçamentos e limites | F05, F06 | revisão de `gateway/config.yaml` + seed | `gateway/` | done |
 | ST-06 | `tests/characterization/` | F02 | existe e passa | `tests/characterization/` | done |
 | ST-07 | `metrics/` com script e `results/` das três versões | F03, F05, F08 | AC-MET-01 | `metrics/` | in_progress (script + v1) |
 | ST-08 | `docs/refactoring-plan.md` | F04, F05 | AC-PLAN-01 | `docs/refactoring-plan.md` | done |
-| ST-09 | `docs/adr/` (um arquivo por decisão) | F05–F08 | AC-ADR-01 | `docs/adr/` | in_progress (0001–0003, 0008) |
+| ST-09 | `docs/adr/` (um arquivo por decisão) | F05–F08 | AC-ADR-01 | `docs/adr/` | in_progress (0001–0006, 0008, 0009) |
 | ST-10 | Arquivos extras (Dockerfiles, scripts, testes da main, serviços) declarados no compose e no README | F08 | revisão do README "Como rodar" | `README.md` | pending |
 | ST-11 | Tags marcam estados reais: v1 = app recebido + suíte; v2 = refatorado atrás do gateway com mesmo comportamento | F02, F05 | AC-DIAG-02/03/04, AC-PLAN-02 | `docs/evidence/f02/`, `docs/evidence/f05/` | done |
 | ST-12 | Campos adicionais em contratos (se houver) documentados no README | F07, F08 | revisão (ex.: `progress` e `reason` no status da F3) | `README.md` | pending |
@@ -153,11 +153,11 @@
 | RM-02 | Diagnóstico da v1 | 4 dores: comando, resultado, causa no código | F01 | done |
 | RM-03 | Como rodar | subida, testes de caracterização e script de métrica, com os comandos exatos | F02, F03, F08 | in_progress (subida + suíte; métrica na F03) |
 | RM-04 | Métrica | leitura dos três gráficos (o que saiu de onde e por quê) e exceções declaradas | F08 | pending |
-| RM-05 | Tabela de capacidades | capacidade lógica, feature, modelo primário, fallback técnico, política fraca, máximo de tentativas por destino | F06 | pending |
-| RM-06 | Tabela de fallback | por feature: resposta e status sem `large` disponível | F06 | pending |
+| RM-05 | Tabela de capacidades | capacidade lógica, feature, modelo primário, fallback técnico, política fraca, máximo de tentativas por destino | F06 | done |
+| RM-06 | Tabela de fallback | por feature: resposta e status sem `large` disponível | F06 | done |
 | RM-07 | Fluxos | por feature: modo escolhido e como consumir, com `curl` exato | F07 | pending |
-| RM-08 | Troca de modelo | arquivo, o que alterar, comando | F06 | pending |
-| RM-09 | Roteiro de governança | comandos que demonstram recusa por orçamento e por limite | F06 | pending |
+| RM-08 | Troca de modelo | arquivo, o que alterar, comando | F06 | done |
+| RM-09 | Roteiro de governança | comandos que demonstram recusa por orçamento e por limite | F06 | done |
 | RM-10 | Mapa de decisões | tabela ADR, nível, resumo | F08 | pending |
 
 ## 7. Cobertura por fase (resumo)
