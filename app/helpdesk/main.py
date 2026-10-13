@@ -1,11 +1,12 @@
 from fastapi import FastAPI
 
-from . import classification, extraction, llm, report, suggestion
+from . import classification, config, extraction, llm, report, suggestion, tickets
 from .schemas import (Classification, OrderData, PeriodInput, ReplySuggestion, TicketInput,
                       TopicsReport)
 
 app = FastAPI(title="Helpdesk")
 gateway = llm.ProviderGateway()
+ticket_source = tickets.JsonlTicketSource(config.TICKETS_FILE)
 
 
 @app.get("/health")
@@ -30,4 +31,4 @@ def extract_order_data(ticket: TicketInput) -> OrderData:
 
 @app.post("/reports/topics")
 def topics_report(period: PeriodInput) -> TopicsReport:
-    return report.topics(period)
+    return report.topics(period, gateway, ticket_source)
