@@ -1,0 +1,42 @@
+# Juízes independentes da F05 (2026-10-13T16:51:00Z) em ec1a935, a partir de docker compose down -v
+compose up --wait: ok em 33 s
+{"status":"ok"} status=200
+
+## 1. Comportamento
+17 passed in 36.01s
+
+## 2. Suíte idêntica à v1-coupled
+OK git diff --exit-code v1-coupled -- tests/characterization/ vazio
+
+## 4. Restrições
+OK grep -rE "gpt-fake|claude-fake" app/ vazio
+OK grep de chaves de provider em app/ vazio
+OK app/ não referencia o provider-fake
+OK docker compose exec app env sem chaves de provider
+env do app (projeto): GATEWAY_BASE_URL GATEWAY_API_KEY 
+OK docker compose config: servi�o app sem env_file/chaves; volumes: ['C:\\dev\\desafio-arquitetura-era-ia-1\\data:/data']
+OK só main.py importa adapters.gateway e tickets
+cliente HTTP do modelo em: app/helpdesk/adapters/gateway.py
+fastapi==0.115.6 openai==3.19.0 pydantic==2.14.1 pydantic_core==2.50.1 
+
+## 3. Estrutura (métrica v2)
+component,ca,ce,i,a,d
+adapters.gateway,1,1,0.50,0.00,0.50
+classification,1,2,0.67,0.00,0.33
+extraction,1,2,0.67,0.00,0.33
+main,0,7,1.00,0.00,0.00
+ports,6,0,0.00,1.00,0.00
+report,1,2,0.67,0.00,0.33
+schemas,5,0,0.00,0.00,1.00
+suggestion,1,2,0.67,0.00,0.33
+tickets,1,1,0.50,0.00,0.50
+zona de dor: schemas
+
+## Prova: chamadas via gateway (F1 e F2 pela borda)
+classification status=200 total=1.093642s
+reply-suggestion status=200 total=15.968715s
+$ curl -s localhost:8090/admin/calls?last=5
+[{"id":"aa506611a84e","ts":"2026-10-13T16:52:22.622+00:00","provider":"anthropic","model":"claude-fake-large","task":"suggest","stream":false,"status":200,"input_tokens":19,"output_tokens":606,"duration_ms":15952},{"id":"2c86cd64f43d","ts":"2026-10-13T16:52:21.495+00:00","provider":"openai","model":"gpt-fake-large","task":"classify","stream":false,"status":200,"input_tokens":19,"output_tokens":11,"duration_ms":1076}]
+$ docker compose logs gateway --since 2026-10-13T16:52:21Z | grep chat/completions
+172.23.0.5:60302 - "POST /chat/completions HTTP/1.1" 200 OK
+172.23.0.5:60302 - "POST /chat/completions HTTP/1.1" 200 OK

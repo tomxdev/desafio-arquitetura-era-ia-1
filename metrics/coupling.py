@@ -174,6 +174,7 @@ def plot(metrics: list[Metrics], path: Path, title: str) -> None:
         groups.setdefault((float(fmt(m.i)), float(fmt(m.a))), []).append(m.component)
     previous: tuple[float, float] | None = None
     below = False
+    lowest = 0.0
     for (i, a), names in sorted(groups.items(), key=lambda item: (item[0][1], item[0][0])):
         ax.scatter(i, a, s=60, color="#222222", zorder=3)
         # Pontos vizinhos na mesma altura alternam o rótulo entre acima e abaixo para não sobrepor.
@@ -183,9 +184,10 @@ def plot(metrics: list[Metrics], path: Path, title: str) -> None:
         offset = (6, -10 - 10 * len(names)) if below else (6, 6)
         ax.annotate(label, (i, a), textcoords="offset points", xytext=offset, fontsize=8)
         previous = (i, a)
+        lowest = min(lowest, a - 0.04 * len(names) - 0.04) if below else lowest
 
     ax.set_xlim(-0.05, 1.1)
-    ax.set_ylim(-0.05, 1.1)
+    ax.set_ylim(min(-0.05, lowest), 1.1)
     ax.set_xlabel("I (instabilidade) = Ce / (Ce + Ca)")
     ax.set_ylabel("A (abstração) = classes abstratas / classes")
     ax.set_title(f"Acoplamento: {title}")

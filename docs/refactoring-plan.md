@@ -116,6 +116,42 @@ Também decidido a partir do piloto:
 
 Qualquer falha devolve o alvo ao agente com a saída do juiz; o diff só é commitado depois dos quatro juízes verdes. As interações ficam registradas abaixo.
 
-### Registro do handoff
+### Registro do handoff (F05, 2026-10-13)
 
-*A preencher na F05 (prompt efetivamente entregue, iterações, rejeições e motivos, medição final).*
+**Antes do handoff (feito por mim, não pelo agente):** o gateway LiteLLM e o `gateway-db` subiram no compose com as quatro capacidades lógicas em modelos `large` e a chave virtual do app semeada na subida (commit `91c83f5`). Conferi direto no gateway, com `max_tokens: 2000` e a mesma mensagem da v1, que as quatro tarefas devolvem o mesmo texto da v1: a sugestão é idêntica ao golden (2.424 caracteres), e o relatório de um dia gera os mesmos temas com os mesmos 6.132 tokens de entrada. Isso tirou do caminho do agente o maior risco (a tradução Messages → Chat Completions mudar a saída).
+
+**O que foi entregue ao agente:** um subagente Claude Code (Claude Opus 5.5), no mesmo clone e branch, com o compose no ar. Recebeu o [prompt literal](evidence/f05/handoff-prompt.md): este plano, os cinco alvos restantes em ordem, o desenho esperado de cada um (porta, nomes das capacidades, construtor do `GatewayClient`, variáveis do ponto de composição, versões fixadas no `requirements.txt`), as regras inegociáveis e os quatro juízes com os comandos exatos, mais a regra de só commitar um alvo depois dos quatro verdes.
+
+**Iterações** ([log do agente](evidence/f05/handoff-log.md)):
+
+| Alvo | Commit | Juízes | Observação |
+|---|---|---|---|
+| 1. `suggestion` | `7883f87` | 4/4 (17 passed) | o primeiro juiz 3 falhou por um problema no **script de juízes do agente** (o Python do Windows não resolvia o `/tmp` do Git Bash); corrigido com `cygpath`, sem mexer na métrica nem no código, e o mesmo CSV foi reavaliado |
+| 2. `extraction` | `ff6941e` | 4/4 | — |
+| 3. `report` + `tickets` | `a72685f` | 4/4 | `main` montou `JsonlTicketSource(config.TICKETS_FILE)` provisoriamente até o alvo 4 |
+| 4. `adapters.gateway` | `fcd8b71` | 4/4 | **desvio aceito:** o bloco `environment` do serviço `app` entrou aqui, e não no alvo 5, porque o `GatewayClient` montado em `main` exige as variáveis, e sem elas o juiz 1 não subiria o app |
+| 5. dissolver `config` e `llm` | `ec1a935` | 4/4 | `env_file` removido do `app`; `anthropic` removido; `pydantic`/`pydantic_core` fixados |
+
+Nenhum alvo foi rejeitado pelos juízes. Outro desvio reportado e aceito: o SDK `openai` com `base_url=http://gateway:4000` chama `POST /chat/completions` (sem `/v1`), rota que o LiteLLM também atende (confirmado no log do gateway).
+
+**Aceite independente** (refeito por mim depois do agente, a partir de `docker compose down -v`, [evidência](evidence/f05/judges.txt)): 17 passed; suíte idêntica à `v1-coupled`; nenhum nome físico, chave de provider nem referência ao `provider-fake` em `app/`; `env` do `app` só com `GATEWAY_BASE_URL` e `GATEWAY_API_KEY`; `docker compose config` sem `env_file` no `app`; único cliente do modelo em `adapters/gateway.py`, importado só por `main.py`; `/admin/calls` + log do gateway mostram cada chamada da borda passando pelo gateway.
+
+Revisei também o código entregue: as features ficaram com a mesma lógica da v1 (mensagem `TASK: ...`, validações 502/422, lotes de 150 com a mesma agregação). A única mudança de estrutura fora do pedido foi o `MAX_OUTPUT_TOKENS = 2000` como constante do ponto de composição (aceito: é configuração do cliente, não regra de feature).
+
+### Medição final: `v1-coupled` → `v2-decoupled`
+
+| component | v1 (ca, ce, i, a, d) | v2 (ca, ce, i, a, d) |
+|---|---|---|
+| adapters.gateway | — | 1, 1, 0.50, 0.00, 0.50 |
+| classification | 1, 3, 0.75, 0.00, 0.25 | 1, 2, 0.67, 0.00, 0.33 |
+| config | 6, 0, 0.00, 0.00, **1.00** | *removido* |
+| extraction | 1, 3, 0.75, 0.00, 0.25 | 1, 2, 0.67, 0.00, 0.33 |
+| llm | 4, 1, 0.20, 0.00, **0.80** | *removido* |
+| main | 0, 5, 1.00, 0.00, 0.00 | 0, 7, 1.00, 0.00, 0.00 |
+| ports | — | 6, 0, 0.00, 1.00, 0.00 |
+| report | 1, 4, 0.80, 0.00, 0.20 | 1, 2, 0.67, 0.00, 0.33 |
+| schemas | 5, 0, 0.00, 0.00, **1.00** | 5, 0, 0.00, 0.00, **1.00** |
+| suggestion | 1, 3, 0.75, 0.00, 0.25 | 1, 2, 0.67, 0.00, 0.33 |
+| tickets | 1, 1, 0.50, 0.00, 0.50 | 1, 1, 0.50, 0.00, 0.50 |
+
+Critério de pronto da seção 3: (1) suíte verde e idêntica ✔; (2) só `schemas` na zona de dor, exceção estável por natureza a declarar no ADR 0008 ✔; (3) cliente do modelo num único componente, importado só pelo ponto de composição ✔; (4) sem nomes físicos nem chaves em `app/` ✔.

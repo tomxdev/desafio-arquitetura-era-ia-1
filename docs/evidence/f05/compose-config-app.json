@@ -1,0 +1,45 @@
+{
+  "build": {
+    "context": "C:\\dev\\desafio-arquitetura-era-ia-1\\app",
+    "dockerfile": "Dockerfile"
+  },
+  "command": null,
+  "depends_on": {
+    "gateway": {
+      "condition": "service_healthy",
+      "required": true
+    },
+    "provider-fake": {
+      "condition": "service_healthy",
+      "required": true
+    }
+  },
+  "entrypoint": null,
+  "environment": {
+    "GATEWAY_API_KEY": "sk-helpdesk-app-0001",
+    "GATEWAY_BASE_URL": "http://gateway:4000"
+  },
+  "healthcheck": {
+    "test": [
+      "CMD",
+      "python",
+      "-c",
+      "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health')"
+    ],
+    "timeout": "3s",
+    "interval": "2s",
+    "retries": 20
+  },
+  "networks": {
+    "default": null
+  },
+  "volumes": [
+    {
+      "type": "bind",
+      "source": "C:\\dev\\desafio-arquitetura-era-ia-1\\data",
+      "target": "/data",
+      "read_only": true,
+      "bind": {}
+    }
+  ]
+}

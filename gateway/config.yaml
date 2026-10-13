@@ -1,0 +1,37 @@
+# AI Gateway (LiteLLM Proxy): capacidades lógicas do helpdesk → modelos físicos.
+# A aplicação só conhece os nomes lógicos (model_name). Trocar o modelo físico de uma capacidade
+# é editar o bloco dela aqui e reiniciar só o gateway: docker compose restart gateway
+
+model_list:
+  - model_name: helpdesk-classify          # F1 Classificar ticket
+    litellm_params:
+      model: openai/gpt-fake-large
+      api_base: http://provider-fake:8090/openai/v1
+      api_key: os.environ/FAKE_OPENAI_KEY
+
+  - model_name: helpdesk-suggest           # F2 Sugerir resposta
+    litellm_params:
+      model: anthropic/claude-fake-large
+      api_base: http://provider-fake:8090/anthropic
+      api_key: os.environ/FAKE_ANTHROPIC_KEY
+
+  - model_name: helpdesk-topics            # F3 Relatório de temas
+    litellm_params:
+      model: anthropic/claude-fake-large
+      api_base: http://provider-fake:8090/anthropic
+      api_key: os.environ/FAKE_ANTHROPIC_KEY
+
+  - model_name: helpdesk-extract           # F4 Extrair dados do pedido
+    litellm_params:
+      model: openai/gpt-fake-large
+      api_base: http://provider-fake:8090/openai/v1
+      api_key: os.environ/FAKE_OPENAI_KEY
+
+litellm_settings:
+  # v2: sem retry nem fallback no gateway (o comportamento externo não muda nesta tag).
+  # Timeout, retry com backoff e fallback entram na F06, com ADR.
+  num_retries: 0
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  database_url: os.environ/DATABASE_URL
