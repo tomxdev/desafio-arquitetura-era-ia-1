@@ -1,0 +1,5 @@
+# Tags remotas (2026-10-13T15:43:06Z)
+4664689873bcfd16238dff37609b3c01a54df0f9	refs/tags/v1-coupled
+fae6db47eb838e0a74022f324188ab9a8a39829a	refs/tags/v1-coupled^{}
+# v1-coupled^{commit} = fae6db47eb838e0a74022f324188ab9a8a39829a
+OK git diff --quiet upstream/main v1-coupled -- app/
