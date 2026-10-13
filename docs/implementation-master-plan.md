@@ -1157,8 +1157,8 @@ git clean -ndx          # revisar antes de usar -fdx; nunca apagar .env sem quer
 |---|---|---|---|---|---|---|
 | F00 | done | feature/00-bootstrap | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/1 | 5603bf0 | docs/evidence/f00/ | CI static+e2e verdes; proteção develop + ruleset de tags `v*` (id 25008762) aplicados |
 | F01 | done | feature/01-diagnostico-v1 | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/2 | 7ef9b19 | docs/evidence/f01/ | 4 dores + large×mini; CI verde; `app/` = upstream |
-| F02 | in_progress | feature/02-caracterizacao | — | — | docs/evidence/f02/ | suíte 17/17 2× contra a v1 |
-| F02-REL | pending | release/v1-coupled | — | — | tag `v1-coupled`: — | confirmação humana |
+| F02 | done | feature/02-caracterizacao | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/3 | de5f588 | docs/evidence/f02/ | suíte 17/17 2× local + CI |
+| F02-REL | in_progress | release/v1-coupled | (PR para main aberto, aguardando confirmação) | — | tag `v1-coupled`: — | confirmação humana |
 | F03 | pending | feature/03-metrica | — | — | metrics/results/v1-coupled.* | |
 | F04 | pending | feature/04-plano-piloto | — | — | docs/evidence/f04/ | |
 | F05 | pending | feature/05-gateway-v2 | — | — | docs/evidence/f05/ | |
