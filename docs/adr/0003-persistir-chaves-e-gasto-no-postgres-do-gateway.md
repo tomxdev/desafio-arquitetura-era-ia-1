@@ -26,6 +26,8 @@ As chaves são criadas na subida por `gateway/seed_keys.py`, executado pelo `gat
 - A subida aplica ~170 migrações do Prisma no primeiro `up` (~25 s neste host); com o volume existente, é mais rápida.
 - Os valores de chaves e senha são de laboratório, versionados no `.env.example` por exigência de reprodutibilidade (`cp .env.example .env` basta); num ambiente real viriam de um cofre.
 - `docker compose down -v` apaga o volume (gasto e chaves); a próxima subida recria as chaves.
+- O gateway é publicado só em `127.0.0.1:4000` (inspeção e roteiro de governança no host), para não expor a API de administração na rede com a master key de laboratório.
+- Limitação conhecida: trocar o valor de `HELPDESK_GATEWAY_KEY` sem `down -v` cria a chave nova, mas não revoga a antiga, que continua no banco. Rotação de chave não é requisito do desafio; o seeder passa a tratar isso quando gerenciar várias chaves (F06).
 
 ## Evidência
 

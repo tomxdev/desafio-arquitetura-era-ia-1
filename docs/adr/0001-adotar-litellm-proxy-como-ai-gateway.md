@@ -21,7 +21,7 @@ O requisito 5 pede um gateway **self-hosted**, rodando como serviço `gateway` n
 
 Opção 1, na versão `v1.102.1` (pinada; é a testada pelo `provider-fake/README.md`). Ela entrega nativamente o que o requisito 5 pede: nomes lógicos (`model_name`) mapeados para modelos físicos de providers diferentes, API única compatível com OpenAI para a aplicação, chaves virtuais com `max_budget`/`rpm_limit`, `num_retries`/`timeout`/`fallbacks` por capacidade, e o preço por token configurável. A opção 3 reimplementaria tudo isso (e seria código nosso para manter); a 2 exigiria mais peças para o mesmo efeito.
 
-**Posição:** entre a aplicação e os providers, dentro da rede do compose. O `app` fala só com `http://gateway:4000` usando a sua chave virtual; o gateway é o único serviço que conhece os providers, os modelos físicos e as chaves `FAKE_*`. A porta 4000 é publicada no host apenas para o roteiro de governança e para inspeção.
+**Posição:** entre a aplicação e os providers, dentro da rede do compose. O `app` fala só com `http://gateway:4000` usando a sua chave virtual; o gateway é o único serviço que conhece os providers, os modelos físicos e as chaves `FAKE_*`. A porta 4000 é publicada só em `127.0.0.1` do host, apenas para o roteiro de governança e para inspeção.
 
 ## Consequências
 

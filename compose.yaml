@@ -47,7 +47,7 @@ services:
     volumes:
       - ./gateway:/etc/litellm:ro
     ports:
-      - "4000:4000"
+      - "127.0.0.1:4000:4000"   # só no host local: a master key do .env.example é de laboratório
     healthcheck:
       test: ["CMD", "python", "-c", "import os, urllib.request; assert os.path.exists('/tmp/keys-ready'); urllib.request.urlopen('http://127.0.0.1:4000/health/liveliness')"]
       interval: 3s

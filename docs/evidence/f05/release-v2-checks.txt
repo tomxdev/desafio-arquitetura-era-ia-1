@@ -15,3 +15,4 @@ compose: up (healthy)
 OK env do app sem chaves de provider
 $ python -m pytest tests/characterization -q
 17 passed in 35.94s
+--- após ajuste do review: porta 4000 em 127.0.0.1:4000; suíte: 17 passed in 35.49s
