@@ -1,0 +1,2 @@
+# Suíte após o piloto (2026-10-13T16:35:04Z); tests/characterization inalterado desde v1-coupled: sim
+17 passed in 35.43s

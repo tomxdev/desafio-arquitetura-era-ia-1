@@ -1161,7 +1161,7 @@ git clean -ndx          # revisar antes de usar -fdx; nunca apagar .env sem quer
 | F02 | done | feature/02-caracterizacao | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/3 | de5f588 | docs/evidence/f02/ | suíte 17/17 2× local + CI |
 | F02-REL | done | release/v1-coupled | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/4 (back-merge #5) | fae6db4 | tag `v1-coupled` → fae6db4 (anotada 4664689) | confirmado pelo usuário; proteção da main aplicada |
 | F03 | done | feature/03-metrica | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/6 | 5c432ea | metrics/results/v1-coupled.*, docs/evidence/f03/ | v1 = oráculo; 12 testes; inclui correções do review do PR #4 |
-| F04 | pending | feature/04-plano-piloto | — | — | docs/evidence/f04/ | |
+| F04 | in_progress | feature/04-plano-piloto | — | — | docs/evidence/f04/ | piloto em classification: 17/17; revisão 1 registrada |
 | F05 | pending | feature/05-gateway-v2 | — | — | docs/evidence/f05/ | |
 | F05-REL | pending | release/v2-decoupled | — | — | tag `v2-decoupled`: — | confirmação humana |
 | F06 | pending | feature/06-governanca-resiliencia | — | — | docs/evidence/f06/ | |
@@ -1184,8 +1184,8 @@ git clean -ndx          # revisar antes de usar -fdx; nunca apagar .env sem quer
 | D5 | Valores de timeout por capacidade e `num_retries` | F06 | medições + limites de 3 s / 15 s / 60 s | pending |
 | D6 | LiteLLM esconde `midstream_error` com fallback no meio do stream? | F07 | teste com `midstream_error` no primário da F2 | pending |
 | D7 | Período curto da F3 na caracterização (≤ 30 s pela borda) | F02 | tempo medido na F01 | **resolvida**: `2026-08-01`→`2026-08-01` = 137 tickets, 1 lote, 9,85 s pela borda |
-| D8 | `config.py` na main: módulo próprio vs. ponto de composição | F04/F05 | responsabilidade + métrica; ADR 0008 | pending |
-| D9 | Onde moram exceções de domínio sem cair na zona de dor | F05/F07 | idem | pending |
+| D8 | `config.py` na main: módulo próprio vs. ponto de composição | F04/F05 | responsabilidade + métrica; ADR 0008 | **resolvida (Revisão 1 do refactoring-plan)**: dissolver `config`; nomes físicos e chaves vão para o gateway, o resto é lido em `main` e injetado |
+| D9 | Onde moram exceções de domínio sem cair na zona de dor | F05/F07 | idem | parcial: adaptadores concretos declaram a porta que implementam (`class GatewayClient(LLMGateway)`); exceções de domínio decididas na F05/F07 |
 | D10 | Classe abstrata indireta e imports em `TYPE_CHECKING` na régua | F03 | interpretação literal + ADR 0008 | **resolvida**: só bases diretas `Protocol`/`ABC`; todo import conta (incl. funções e `TYPE_CHECKING`); arredondamento meio para cima; CSV com 2 casas (ADR 0008) |
 
 ### 8.2 Riscos
