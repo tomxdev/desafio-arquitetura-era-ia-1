@@ -1162,8 +1162,8 @@ git clean -ndx          # revisar antes de usar -fdx; nunca apagar .env sem quer
 | F02-REL | done | release/v1-coupled | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/4 (back-merge #5) | fae6db4 | tag `v1-coupled` → fae6db4 (anotada 4664689) | confirmado pelo usuário; proteção da main aplicada |
 | F03 | done | feature/03-metrica | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/6 | 5c432ea | metrics/results/v1-coupled.*, docs/evidence/f03/ | v1 = oráculo; 12 testes; inclui correções do review do PR #4 |
 | F04 | done | feature/04-plano-piloto | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/7 | 36e1c17 | docs/evidence/f04/ | piloto em classification: 17/17; revisão 1 registrada |
-| F05 | in_progress | feature/05-gateway-v2 | — | — | docs/evidence/f05/ | gateway + refatoração via agente (5 alvos, 0 rejeições); juízes independentes 4/4 |
-| F05-REL | pending | release/v2-decoupled | — | — | tag `v2-decoupled`: — | confirmação humana |
+| F05 | done | feature/05-gateway-v2 | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/8 | 05e9400 | docs/evidence/f05/ | gateway + refatoração via agente (5 alvos, 0 rejeições); juízes independentes 4/4; corrigido bug do `! grep` no CI |
+| F05-REL | in_progress | release/v2-decoupled | (PR para main aberto, aguardando confirmação) | — | tag `v2-decoupled`: — | confirmação humana |
 | F06 | pending | feature/06-governanca-resiliencia | — | — | docs/evidence/f06/ | |
 | F07 | pending | feature/07-fluxos | — | — | docs/evidence/f07/ | |
 | F08 | pending | feature/08-adrs-docs | — | — | docs/evidence/f08/ | |
@@ -1200,6 +1200,7 @@ git clean -ndx          # revisar antes de usar -fdx; nunca apagar .env sem quer
 | R6 | Cooldown do router polui cenários seguidos | média | médio | reset e restart entre cenários; ajustar o cooldown |
 | R7 | Zona de dor na main por folhas concretas (config, erros) | alta | médio | responsabilidade no ponto de composição; exceções válidas só para tipos de valor |
 | R8 | CI lento/instável com LiteLLM + Postgres | média | baixo | cache, timeout maior, evidência local |
+| R15 | Check de CI com `! grep` nunca falha em `bash -e` (ocorreu até a F05; corrigido no PR #8) | — | alto (falso verde) | `if grep ...; then exit 1; fi`, testado com nome plantado |
 | R9 | Docker/Drive: workspace em Google Drive | — | — | mitigado por U1 (clone em `C:\dev`) |
 | R10 | gh sem escopo `workflow` | certo | bloqueia a F00 | ação humana na F00 |
 | R12 | Acentos em `curl -d` no Windows corrompem o corpo (400) | certo neste host | médio (falso negativo em testes/roteiros) | payloads em arquivo + `--data-binary @arq`; testes em Python (httpx) |
