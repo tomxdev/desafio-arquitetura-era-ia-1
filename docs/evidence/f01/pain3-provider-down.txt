@@ -1,0 +1,47 @@
+# Dor 3a: provider openai em error_500 (2026-10-13T15:11:20Z)
+$ POST /admin/failures {"provider":"openai","mode":"error_500"}
+{"providers":{"openai":"error_500","anthropic":"normal"},"models":{},"effective_by_model":{"gpt-fake-large":"error_500","gpt-fake-mini":"error_500","claude-fake-large":"normal","claude-fake-mini":"normal"}}
+/tickets/classification -> Internal Server Error
+   status=500 total=1.185359s
+/tickets/extraction -> Internal Server Error
+   status=500 total=1.444944s
+/tickets/reply-suggestion -> {"ticket_id":"TK-00042","suggestion":"Olá! Sinto muito pelo transtorno com a entrega do seu pedido.\n\nCaso o pedido seja considerado extraviado, fazemos o reenvio sem ne
+   status=200 total=15.958184s
+/reports/topics -> {"start":"2026-08-01","end":"2026-08-01","total_tickets":137,"topics":[{"topic":"Problema no rastreio","count":20,"examples":["TK-00001","TK-00007","TK-00008"]},{"topic":"Pedido ext
+   status=200 total=9.843832s
+/admin/calls (do mais antigo para o mais recente):
+   15:11:20.597 openai gpt-fake-large classify status= 500 dur_ms= 0
+   15:11:20.999 openai gpt-fake-large classify status= 500 dur_ms= 0
+   15:11:21.775 openai gpt-fake-large classify status= 500 dur_ms= 0
+   15:11:21.820 openai gpt-fake-large extract status= 500 dur_ms= 0
+   15:11:22.292 openai gpt-fake-large extract status= 500 dur_ms= 0
+   15:11:23.259 openai gpt-fake-large extract status= 500 dur_ms= 0
+   15:11:23.306 anthropic claude-fake-large suggest status= 200 dur_ms= 15951
+   15:11:39.372 anthropic claude-fake-large topics status= 200 dur_ms= 9801
+
+# Dor 3b: provider anthropic em error_500
+$ POST /admin/failures {"provider":"anthropic","mode":"error_500"}
+{"providers":{"openai":"normal","anthropic":"error_500"},"models":{},"effective_by_model":{"gpt-fake-large":"normal","gpt-fake-mini":"normal","claude-fake-large":"error_500","claude-fake-mini":"error_500"}}
+/tickets/reply-suggestion -> Internal Server Error
+   status=500 total=1.241544s
+/reports/topics -> Internal Server Error
+   status=500 total=1.508371s
+/tickets/classification -> {"ticket_id":"TK-00042","category":"delivery","priority":"high"}
+   status=200 total=1.084001s
+/admin/calls:
+   15:11:49.408 anthropic claude-fake-large suggest status= 500 dur_ms= 0
+   15:11:49.798 anthropic claude-fake-large suggest status= 500 dur_ms= 0
+   15:11:50.641 anthropic claude-fake-large suggest status= 500 dur_ms= 0
+   15:11:50.722 anthropic claude-fake-large topics status= 500 dur_ms= 1
+   15:11:51.208 anthropic claude-fake-large topics status= 500 dur_ms= 1
+   15:11:52.184 anthropic claude-fake-large topics status= 500 dur_ms= 1
+   15:11:52.229 openai gpt-fake-large classify status= 200 dur_ms= 1075
+
+# Dor 3c: provider openai em timeout (segura a conexão por 300 s)
+$ POST /admin/failures {"provider":"openai","mode":"timeout"}
+{"providers":{"openai":"timeout","anthropic":"normal"},"models":{},"effective_by_model":{"gpt-fake-large":"timeout","gpt-fake-mini":"timeout","claude-fake-large":"normal","claude-fake-mini":"normal"}}
+/tickets/classification -> <html><head><title>504 Gateway Time-out</title></head><body><center><h1>504 Gateway Time-out</h1></center><hr><center>nginx/1.27.5</center></body></html>
+   status=504 total=30.032058s
+/admin/calls logo após a resposta da borda:
+   15:11:53.504 openai gpt-fake-large classify status= 504 dur_ms= None
+# Esperado pelo SDK: read timeout de 600 s e 2 retries; a borda desiste aos 30 s, mas a thread do app continua presa.

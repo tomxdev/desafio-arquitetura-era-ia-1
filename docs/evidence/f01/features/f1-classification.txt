@@ -1,0 +1,9 @@
+$ curl -s -X POST localhost:8000/tickets/classification -H 'Content-Type: application/json' --data-binary @scripts/diagnostics/payloads/ticket-tk-00042.json
+# corpo: {"ticket_id": "TK-00042", "text": "Meu pedido #481516 não chegou e já passou do prazo, urgente"}
+
+{"ticket_id":"TK-00042","category":"delivery","priority":"high"}
+--
+status=200 ttfb=1.083985s total=1.084044s
+
+$ curl -s 'localhost:8090/admin/calls?last=5'
+[{"id":"b0a8b7172765","ts":"2026-10-13T15:00:53.435+00:00","provider":"openai","model":"gpt-fake-large","task":"classify","stream":false,"status":200,"input_tokens":19,"output_tokens":11,"duration_ms":1076}]

@@ -1,0 +1,2 @@
+openai 3.19.0 DEFAULT_MAX_RETRIES= 2 DEFAULT_TIMEOUT= Timeout(connect=5.0, read=600, write=600, pool=600)
+anthropic 1.8.0 DEFAULT_MAX_RETRIES= 2 DEFAULT_TIMEOUT= Timeout(connect=5.0, read=600, write=600, pool=600)
