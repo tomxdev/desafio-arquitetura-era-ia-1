@@ -24,7 +24,7 @@ CAPABILITIES = ["helpdesk-classify", "helpdesk-suggest", "helpdesk-topics", "hel
 
 KEYS = [
     {"key": os.environ["HELPDESK_GATEWAY_KEY"], "key_alias": "helpdesk-app", "models": CAPABILITIES,
-     "max_budget": 50.0, "budget_duration": "30d", "rpm_limit": 600},
+     "max_budget": 100.0, "budget_duration": "30d", "rpm_limit": 600},
     # Orçamento de US$ 0,0001: a 1ª classificação (~US$ 0,00016) passa e estoura; a 2ª é recusada.
     {"key": os.environ["GATEWAY_DEMO_BUDGET_KEY"], "key_alias": "demo-budget", "models": ["helpdesk-classify"],
      "max_budget": 0.0001},
