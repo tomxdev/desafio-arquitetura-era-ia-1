@@ -1,0 +1,10 @@
+# Host F00 2026-10-13T14:51:08Z
+git version 2.56.0.windows.1
+gh version 2.101.0 (2026-09-15)
+gh scopes:   - Token scopes: 'gist', 'read:org', 'repo'
+docker server 29.7.2
+Docker Compose version v5.5.0
+Python 3.12.10
+uv 0.12.19 (bea138450 2026-09-24 x86_64-pc-windows-msvc)
+venv: Python 3.12.10
+core.autocrlf(local)=false core.eol=lf
