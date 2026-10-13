@@ -2,11 +2,11 @@
 
 Entrega do desafio [Da integração frágil à arquitetura resiliente](https://github.com/devfullcycle/desafio-arquitetura-era-ia-1) (o enunciado completo continua no `README.md` do repositório base). O plano de execução e a rastreabilidade dos critérios estão em [`docs/implementation-master-plan.md`](docs/implementation-master-plan.md) e [`docs/acceptance-matrix.md`](docs/acceptance-matrix.md).
 
-> **Estado atual: v2 (`app/` refatorado atrás do AI Gateway, mesmo comportamento externo da v1).** As seções marcadas como *em construção* são preenchidas nas fases seguintes do plano. O diagnóstico abaixo descreve a v1 (`v1-coupled`).
+> **Estado atual: v2 + governança e resiliência no gateway (contratos HTTP ainda iguais aos da v1).** As seções marcadas como *em construção* são preenchidas nas fases seguintes do plano. O diagnóstico abaixo descreve a v1 (`v1-coupled`).
 
 ## Visão geral
 
-*Em construção (F08).* A aplicação (FastAPI, `app/helpdesk/`) não conhece provider, modelo físico nem chave de provider: cada feature pede uma **capacidade lógica** (`helpdesk-classify`, `helpdesk-suggest`, `helpdesk-topics`, `helpdesk-extract`) por uma porta (`ports.LLMGateway`), e o único componente que fala com o modelo, `adapters/gateway.py` (`GatewayClient`, SDK `openai`), chama o **AI Gateway** (serviço `gateway`, LiteLLM Proxy, [ADR 0001](docs/adr/0001-adotar-litellm-proxy-como-ai-gateway.md)) com uma chave virtual própria. O gateway mapeia cada capacidade para um modelo físico ([ADR 0002](docs/adr/0002-expor-capacidades-logicas-por-feature.md)) e guarda as chaves virtuais e o gasto no `gateway-db` ([ADR 0003](docs/adr/0003-persistir-chaves-e-gasto-no-postgres-do-gateway.md)). Resiliência (timeout, retry, fallback entre providers) e governança entram na próxima etapa; nesta versão, com um provider fora, a feature presa a ele ainda falha (como na v1).
+*Em construção (F08).* A aplicação (FastAPI, `app/helpdesk/`) não conhece provider, modelo físico nem chave de provider: cada feature pede uma **capacidade lógica** (`helpdesk-classify`, `helpdesk-suggest`, `helpdesk-topics`, `helpdesk-extract`) por uma porta (`ports.LLMGateway`), e o único componente que fala com o modelo, `adapters/gateway.py` (`GatewayClient`, SDK `openai`), chama o **AI Gateway** (serviço `gateway`, LiteLLM Proxy, [ADR 0001](docs/adr/0001-adotar-litellm-proxy-como-ai-gateway.md)) com uma chave virtual própria. O gateway mapeia cada capacidade para um modelo físico ([ADR 0002](docs/adr/0002-expor-capacidades-logicas-por-feature.md)) e guarda as chaves virtuais e o gasto no `gateway-db` ([ADR 0003](docs/adr/0003-persistir-chaves-e-gasto-no-postgres-do-gateway.md)). **Quando um provider cai**, cada capacidade passa para o modelo `large` equivalente do outro provider (mesma saída), depois de no máximo 2 tentativas no primário; sem nenhum `large`, F1/F2/F3 respondem com um modelo `mini` e a F4 (extração para uma automação sem revisão humana) falha explicitamente com `503` ([ADR 0006](docs/adr/0006-fallback-tecnico-e-politica-de-modelo-fraco-por-feature.md)). Timeout, retry e fallback moram no gateway; o app não faz retry ([ADR 0009](docs/adr/0009-concentrar-timeout-e-retry-no-gateway.md)). O gasto tem teto mensal e cada chave pode ter orçamento e limite de requisições, recusados antes do provider ([ADR 0004](docs/adr/0004-governar-acesso-com-chaves-orcamento-e-limite.md), [ADR 0005](docs/adr/0005-limitar-gasto-mensal-e-providers-aceitos.md)).
 
 ## Diagnóstico da v1
 
@@ -180,20 +180,31 @@ Script: [`metrics/coupling.py`](metrics/coupling.py); régua e interpretações 
 
 ## Tabela de capacidades
 
-*Preliminar (v2): fallback técnico, política com modelo fraco e tentativas por destino entram na F06.*
+Configuração: [`gateway/config.yaml`](gateway/config.yaml). Decisões: [ADR 0002](docs/adr/0002-expor-capacidades-logicas-por-feature.md) (capacidades), [ADR 0006](docs/adr/0006-fallback-tecnico-e-politica-de-modelo-fraco-por-feature.md) (fallback), [ADR 0009](docs/adr/0009-concentrar-timeout-e-retry-no-gateway.md) (timeout e retry).
 
-| Capacidade lógica | Feature | Modelo primário | Fallback técnico | Modelo fraco | Máx. tentativas por destino |
-|---|---|---|---|---|---|
-| `helpdesk-classify` | F1 | `openai/gpt-fake-large` | — (F06) | — (F06) | 1 |
-| `helpdesk-suggest` | F2 | `anthropic/claude-fake-large` | — (F06) | — (F06) | 1 |
-| `helpdesk-topics` | F3 | `anthropic/claude-fake-large` | — (F06) | — (F06) | 1 por lote |
-| `helpdesk-extract` | F4 | `openai/gpt-fake-large` | — (F06) | — (F06) | 1 |
+| Capacidade lógica | Feature | Modelo primário | Fallback técnico | Política com modelo fraco | Timeout por tentativa | Máx. tentativas por destino |
+|---|---|---|---|---|---|---|
+| `helpdesk-classify` | F1 | `openai/gpt-fake-large` | `anthropic/claude-fake-large` | **sim**: `openai/gpt-fake-mini` | 4 s | primário 2 · fallback 2 · fraco 2 |
+| `helpdesk-suggest` | F2 | `anthropic/claude-fake-large` | `openai/gpt-fake-large` | **sim**: `anthropic/claude-fake-mini` | 30 s | primário 2 · fallback 2 · fraco 2 |
+| `helpdesk-topics` | F3 | `anthropic/claude-fake-large` | `openai/gpt-fake-large` | **sim**: `anthropic/claude-fake-mini` | 30 s | primário 2 · fallback 2 · fraco 2 (por lote) |
+| `helpdesk-extract` | F4 | `openai/gpt-fake-large` | `anthropic/claude-fake-large` | **não** (falha explícita) | 4 s | primário 2 · fallback 2 |
 
-Componente que chama o gateway: [`app/helpdesk/adapters/gateway.py`](app/helpdesk/adapters/gateway.py) (`GatewayClient`, `max_retries=0`, timeout de 60 s por chamada), montado só em [`app/helpdesk/main.py`](app/helpdesk/main.py).
+"2" = 1 tentativa + 1 retry, só para falhas transitórias (500/503/429), com espera crescente entre elas. Timeout não é repetido: vale **1** tentativa por destino. O app não faz retry (`max_retries=0`).
+
+Componente que chama o gateway: [`app/helpdesk/adapters/gateway.py`](app/helpdesk/adapters/gateway.py) (`GatewayClient`, timeout de 60 s por chamada), montado só em [`app/helpdesk/main.py`](app/helpdesk/main.py).
 
 ## Tabela de fallback
 
-*Em construção (F06).*
+O que cada feature faz quando **não há nenhum modelo `large` disponível** (os dois em `error_500`), pela borda ([evidência](docs/evidence/f06/fallback.txt)):
+
+| Feature | Comportamento | Resposta | Status | Por quê |
+|---|---|---|---|---|
+| F1 Classificar | responde com `gpt-fake-mini` | `{"ticket_id", "category", "priority"}` (na amostra, igual ao `large`) | 200 | cliente esperando; mini idêntico em 40/40 |
+| F2 Sugerir | responde com `claude-fake-mini` | `{"ticket_id", "suggestion"}`, texto mais curto (~44%) | 200 | atendente revisa e edita; um rascunho menor é melhor que nada |
+| F3 Relatório | cada lote responde com `claude-fake-mini` | relatório completo | 200 | painel interno; mini idêntico no lote amostrado |
+| F4 Extrair | **falha explícita**, sem modelo fraco | `{"detail": "Capacidade helpdesk-extract indisponível: nenhum modelo disponível (gateway respondeu 500)"}` | **503** | automação sem revisão humana; o mini trocou o pedido pela nota fiscal em 4/40, em formato válido |
+
+Se nenhum destino responder (os dois providers inteiros fora), qualquer feature responde `503` com o mesmo formato de `detail` (F1: 7,3 s, [evidência](docs/evidence/f06/all-down.txt)). O mesmo `503` vale quando a chave do app estoura o orçamento ou o limite de requisições.
 
 ## Fluxos
 
@@ -201,11 +212,40 @@ Componente que chama o gateway: [`app/helpdesk/adapters/gateway.py`](app/helpdes
 
 ## Troca de modelo
 
-*Em construção (F06).* Na v1, ver a dor 4.
+Trocar o modelo físico de uma capacidade é configuração do gateway: o `app` não é reconstruído nem reiniciado.
+
+1. **Arquivo:** [`gateway/config.yaml`](gateway/config.yaml).
+2. **O que alterar:** o `model:` do bloco da capacidade. Ex.: para a classificação usar o modelo barato,
+   ```yaml
+     - model_name: helpdesk-classify
+       litellm_params: {model: openai/gpt-fake-mini, ...}     # era openai/gpt-fake-large
+   ```
+   (para trocar de provider, ajuste também `api_base` e `api_key`, copiando de outro bloco do mesmo provider).
+3. **Comando:** `docker compose restart gateway` (e `docker compose up -d --wait gateway` para esperar ficar saudável).
+
+A próxima chamada aparece em `curl -s "localhost:8090/admin/calls?last=1"` com o novo modelo. Roteiro automático, que troca, confere que o `StartedAt` do `app` não mudou e desfaz: `bash scripts/verify/model_swap.sh` ([evidência](docs/evidence/f06/model-swap.txt)).
 
 ## Roteiro de governança
 
-*Em construção (F06).*
+Chaves de demonstração criadas na subida ([ADR 0004](docs/adr/0004-governar-acesso-com-chaves-orcamento-e-limite.md)): `sk-demo-budget-0001` (orçamento de US$ 0,0001) e `sk-demo-rpm-0001` (2 requisições/minuto), as duas só para `helpdesk-classify`. A chave do app (`helpdesk-app`) tem teto de US$ 100 a cada 30 dias e 600 requisições/minuto ([ADR 0005](docs/adr/0005-limitar-gasto-mensal-e-providers-aceitos.md)).
+
+```bash
+curl -s -X POST localhost:8090/admin/reset
+calls() { curl -s "localhost:8090/admin/calls?last=100" | python -c "import sys,json;print(len(json.load(sys.stdin)))"; }
+chat() { curl -s -w ' [%{http_code}]\n' localhost:4000/chat/completions -H "Authorization: Bearer $1" \
+  -H 'Content-Type: application/json' \
+  -d '{"model": "helpdesk-classify", "messages": [{"role": "user", "content": "TASK: classify\nMeu pedido atrasou"}]}'; }
+
+# Orçamento: a 1ª passa e estoura o orçamento; a 2ª é recusada (429 budget_exceeded) sem chegar ao provider
+calls; chat sk-demo-budget-0001; calls      # 0 → 1
+chat sk-demo-budget-0001; calls             # [429] "Budget has been exceeded!" → continua 1
+
+# Limite: 2 por minuto; a 3ª no mesmo minuto é recusada (429 rate limit) sem chegar ao provider
+chat sk-demo-rpm-0001; chat sk-demo-rpm-0001; calls   # → 3
+chat sk-demo-rpm-0001; calls                          # [429] "Rate limit exceeded" → continua 3
+```
+
+O orçamento da `demo-budget` não se renova: para repetir a parte do orçamento, recrie as chaves (`docker compose down -v && docker compose up -d --build --wait`). Roteiro automático com as conferências: `bash scripts/verify/governance.sh` ([evidência](docs/evidence/f06/governance.txt)).
 
 ## Mapa de decisões
 

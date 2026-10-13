@@ -41,7 +41,7 @@ jobs:
   e2e:
     name: e2e
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
 
@@ -62,6 +62,13 @@ jobs:
           dirs="tests/characterization"
           if [ -d tests/contract ]; then dirs="$dirs tests/contract"; fi
           python -m pytest $dirs -q
+
+      - name: Roteiros de fallback, troca de modelo e governança
+        if: ${{ hashFiles('scripts/verify/fallback.sh') != '' }}
+        run: |
+          bash scripts/verify/fallback.sh
+          bash scripts/verify/model_swap.sh
+          bash scripts/verify/governance.sh
 
       - name: Logs do compose
         if: failure()
