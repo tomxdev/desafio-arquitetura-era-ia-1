@@ -138,6 +138,22 @@ curl -s localhost:8000/health
 
 Serviços: `edge` (borda, `localhost:8000`), `app` (helpdesk), `gateway` (LiteLLM, `localhost:4000`), `gateway-db` (Postgres do gateway) e `provider-fake` (`localhost:8090`). A chave virtual do app é criada na subida, sem passo manual; o `--wait` só retorna quando ela já existe.
 
+Arquivos acrescentados ao repositório base:
+
+| Caminho | Conteúdo |
+|---|---|
+| `gateway/config.yaml` | capacidades, modelos físicos, preços, timeouts, retries e fallbacks do gateway |
+| `gateway/entrypoint.sh`, `gateway/seed_keys.py` | sobem o LiteLLM e criam as chaves virtuais (app e demonstração) de forma idempotente |
+| `app/helpdesk/ports.py`, `app/helpdesk/adapters/gateway.py`, `app/helpdesk/report_jobs.py` | porta do modelo, único cliente do gateway e execução assíncrona da F3 |
+| `tests/characterization/` | suíte de caracterização (goldens da v1) |
+| `tests/contract/` | contratos da `main` (tempos pela borda e cenários de falha) |
+| `metrics/` | script da métrica, testes e `results/` das três versões |
+| `scripts/diagnostics/`, `scripts/verify/` | roteiros do diagnóstico da v1 e das verificações da `main` |
+| `docs/adr/`, `docs/evidence/` | decisões e saídas brutas citadas neste README |
+| `.github/workflows/ci.yml` | CI: áreas protegidas, nomes físicos fora de `app/`, métrica, caracterização, roteiros e contratos |
+
+Todos os testes de uma vez (compose no ar): `python -m pytest -q`.
+
 Diagnóstico da v1 (exige o compose no ar; Git Bash ou bash):
 
 ```bash
