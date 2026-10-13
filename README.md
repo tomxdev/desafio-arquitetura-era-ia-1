@@ -2,7 +2,7 @@
 
 Entrega do desafio [Da integração frágil à arquitetura resiliente](https://github.com/devfullcycle/desafio-arquitetura-era-ia-1) (o enunciado completo continua no `README.md` do repositório base). O plano de execução e a rastreabilidade dos critérios estão em [`docs/implementation-master-plan.md`](docs/implementation-master-plan.md) e [`docs/acceptance-matrix.md`](docs/acceptance-matrix.md).
 
-> **Estado atual: v2 + governança e resiliência no gateway (contratos HTTP ainda iguais aos da v1).** As seções marcadas como *em construção* são preenchidas nas fases seguintes do plano. O diagnóstico abaixo descreve a v1 (`v1-coupled`).
+> **Estado atual: main (F1/F4 síncronos, F2 em streaming SSE, F3 assíncrono), atrás do AI Gateway com governança e resiliência.** As seções marcadas como *em construção* são preenchidas nas fases seguintes do plano. O diagnóstico abaixo descreve a v1 (`v1-coupled`).
 
 ## Visão geral
 
@@ -139,7 +139,24 @@ pip install -r tests/requirements.txt
 python -m pytest tests/characterization -q
 ```
 
-A suíte (`tests/characterization/`) tem 17 casos: corpo inteiro, status e `Content-Type` das 4 features, mais pelo menos um erro de entrada por feature. Cada teste começa com `POST localhost:8090/admin/reset`. As URLs podem ser trocadas com `HELPDESK_BASE_URL` e `PROVIDER_ADMIN_URL`.
+A suíte (`tests/characterization/`) tem 17 casos: corpo inteiro, status e `Content-Type` das 4 features, mais pelo menos um erro de entrada por feature. Cada teste começa com `POST localhost:8090/admin/reset`. As URLs podem ser trocadas com `HELPDESK_BASE_URL` e `PROVIDER_ADMIN_URL`. Nas tags `v1-coupled` e `v2-decoupled` ela é idêntica; na `main`, F2 e F3 são consumidos no novo contrato (SSE e polling), comparados com os mesmos goldens da v1.
+
+Testes dos contratos da main (tempos pela borda e cenários de falha; ~40 s; o do mês inteiro só com `RUN_SLOW=1`, ~6 min):
+
+```bash
+python -m pytest tests/contract -q
+```
+
+Roteiros de verificação (conferem sozinhos o `/admin/calls` e saem com erro se algo divergir):
+
+```bash
+bash scripts/verify/flows.sh        # fluxos F1–F4 pela borda, inclusive o mês inteiro (~7 min)
+bash scripts/verify/fallback.sh     # fallback técnico, tabela de fallback e timeout
+bash scripts/verify/model_swap.sh   # troca de modelo só pelo gateway
+bash scripts/verify/governance.sh   # orçamento e limite de requisições
+```
+
+> Clientes Python no Windows: use `127.0.0.1` (e não `localhost`) para falar com o gateway na porta 4000. Ela só escuta em IPv4 (`127.0.0.1:4000`), e o `httpx` tenta primeiro `::1`, o que acrescenta ~2 s por conexão. O `curl` e o caminho app → gateway não são afetados.
 
 Métrica de acoplamento (Ca, Ce, I, A, D pela régua do requisito 3; grava `metrics/results/<rótulo>.csv` e `.png`):
 
@@ -191,7 +208,7 @@ Configuração: [`gateway/config.yaml`](gateway/config.yaml). Decisões: [ADR 00
 
 "2" = 1 tentativa + 1 retry, só para falhas transitórias (500/503/429), com espera crescente entre elas. Timeout não é repetido: vale **1** tentativa por destino. O app não faz retry (`max_retries=0`).
 
-Componente que chama o gateway: [`app/helpdesk/adapters/gateway.py`](app/helpdesk/adapters/gateway.py) (`GatewayClient`, timeout de 60 s por chamada), montado só em [`app/helpdesk/main.py`](app/helpdesk/main.py).
+Componente que chama o gateway: [`app/helpdesk/adapters/gateway.py`](app/helpdesk/adapters/gateway.py) (`GatewayClient`, sem retry, timeout por capacidade: 12 s em F1/F2/F4 e 50 s por lote na F3), montado só em [`app/helpdesk/main.py`](app/helpdesk/main.py).
 
 ## Tabela de fallback
 
@@ -208,7 +225,64 @@ Se nenhum destino responder (os dois providers inteiros fora), qualquer feature 
 
 ## Fluxos
 
-*Em construção (F07).*
+Decisão e justificativa por feature no [ADR 0007](docs/adr/0007-decidir-o-modo-de-execucao-de-cada-feature.md); medições pela borda em [`docs/evidence/f07/flows.txt`](docs/evidence/f07/flows.txt). Os corpos com acento vêm de arquivo (ver a nota sobre Windows no diagnóstico).
+
+| Feature | Modo | Por quê (árvore de decisão) | Medido pela borda |
+|---|---|---|---|
+| F1 Classificar | **síncrono** (timeout 12 s; sem destino → `503`) | cliente esperando; saída curta cabe em 3 s | 1,09–1,12 s |
+| F2 Sugerir | **streaming SSE** | atendente esperando; texto longo (~16 s) não cabe, mas é consumível aos poucos | 1º trecho em 0,85 s; fim em 16,2 s |
+| F3 Relatório | **Asynchronous Request-Reply** | ninguém esperando; o mês (~5,5 min) não cabe em 30 s; só vale agregado | pedido aceito em 0,07 s; mês completo com 5.000 tickets; sem providers, `failed` em 7,7 s |
+| F4 Extrair | **síncrono estrito** (timeout 12 s; sem `large` → `503`) | automação esperando; saída curta; só serve completa e validada | ~1,1 s |
+
+**F1 (síncrono)**: o resultado completo no corpo.
+
+```bash
+curl -s -X POST localhost:8000/tickets/classification -H "Content-Type: application/json" \
+  --data-binary @scripts/diagnostics/payloads/ticket-tk-00042.json
+# 200 {"ticket_id":"TK-00042","category":"delivery","priority":"high"}
+```
+
+**F2 (streaming SSE)**: `Content-Type: text/event-stream`; consumir com `curl -N` (ou `EventSource`/leitor de stream).
+
+```bash
+curl -N -X POST localhost:8000/tickets/reply-suggestion -H "Content-Type: application/json" \
+  --data-binary @scripts/diagnostics/payloads/ticket-tk-00042.json
+# data: {"chunk": "Olá!"}
+# data: {"chunk": " Sin"}
+# ...
+# event: end
+# data: {"ticket_id": "TK-00042"}
+```
+
+Se o provider falhar no meio (`midstream_error`), o stream termina com `event: error` + `data: {"ticket_id": "TK-00042", "message": "A geração foi interrompida"}`. Se nenhum destino responder antes do primeiro trecho, a resposta é `503` em JSON (como F1/F4).
+
+**F3 (Asynchronous Request-Reply)**: o pedido devolve `202` com `Location` e `Retry-After`; consulte a URL de status até o `303` e siga para o resultado.
+
+```bash
+curl -si -X POST localhost:8000/reports/topics -H "Content-Type: application/json" \
+  -d '{"start": "2026-08-01", "end": "2026-08-31"}'
+# HTTP/1.1 202 Accepted
+# location: /reports/topics/status/1dfe15cd1736
+# retry-after: 5
+# {"job_id":"1dfe15cd1736","state":"pending"}
+
+curl -si localhost:8000/reports/topics/status/1dfe15cd1736
+# 200 {"state":"running","progress":"1800/5000"}      (ou {"state":"pending"}; ou {"state":"failed","reason":"..."})
+# 303 See Other + location: /reports/topics/1dfe15cd1736   (quando termina)
+
+curl -sL localhost:8000/reports/topics/status/1dfe15cd1736   # -L segue o 303 até o relatório
+# 200 {"start":"2026-08-01","end":"2026-08-31","total_tickets":5000,"topics":[...]}
+```
+
+Campos além dos Contratos sugeridos: `job_id` no corpo do `202`, e `progress` (tickets processados/total) e `reason` (motivo da falha) no status. Uma tarefa que não consegue terminar chega a `failed` com o motivo (cada lote tem timeout de 50 s no app). As tarefas ficam em memória no app: um reinício do app as descarta (fora de escopo).
+
+**F4 (síncrono estrito)**: como a F1; sem nenhum `large`, `503 {"detail": "Capacidade helpdesk-extract indisponível: ..."}`.
+
+```bash
+curl -s -X POST localhost:8000/tickets/extraction -H "Content-Type: application/json" \
+  --data-binary @scripts/diagnostics/payloads/ticket-tk-00042.json
+# 200 {"ticket_id":"TK-00042","order_number":"#481516","product":null}
+```
 
 ## Troca de modelo
 
