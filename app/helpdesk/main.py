@@ -25,7 +25,7 @@ def suggest_reply(ticket: TicketInput) -> ReplySuggestion:
 
 @app.post("/tickets/extraction")
 def extract_order_data(ticket: TicketInput) -> OrderData:
-    return extraction.extract(ticket)
+    return extraction.extract(ticket, gateway)
 
 
 @app.post("/reports/topics")

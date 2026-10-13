@@ -42,4 +42,6 @@ class ProviderGateway:
             return call_openai(config.CLASSIFICATION_MODEL, task, content)
         if capability == "helpdesk-suggest":
             return call_anthropic(config.SUGGESTION_MODEL, task, content)
+        if capability == "helpdesk-extract":
+            return call_openai(config.EXTRACTION_MODEL, task, content)
         raise ValueError(f"Capacidade desconhecida: {capability}")
