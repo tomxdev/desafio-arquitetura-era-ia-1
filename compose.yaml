@@ -17,7 +17,6 @@ services:
 
   app:
     build: ./app
-    env_file: .env
     environment:
       GATEWAY_BASE_URL: http://gateway:4000
       GATEWAY_API_KEY: ${HELPDESK_GATEWAY_KEY}
