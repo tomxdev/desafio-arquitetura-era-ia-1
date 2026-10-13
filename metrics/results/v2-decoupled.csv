@@ -1,0 +1,10 @@
+component,ca,ce,i,a,d
+adapters.gateway,1,1,0.50,0.00,0.50
+classification,1,2,0.67,0.00,0.33
+extraction,1,2,0.67,0.00,0.33
+main,0,7,1.00,0.00,0.00
+ports,6,0,0.00,1.00,0.00
+report,1,2,0.67,0.00,0.33
+schemas,5,0,0.00,0.00,1.00
+suggestion,1,2,0.67,0.00,0.33
+tickets,1,1,0.50,0.00,0.50
