@@ -747,7 +747,7 @@ Não introduza o gateway ainda. Não mude contratos HTTP. PR para develop, merge
 
 **5. Arquivos.**
 - Criar: `gateway/config.yaml`, `gateway/seed_keys.py` ou `gateway/entrypoint.sh` (ver decisão), `app/helpdesk/adapters/__init__.py`, `app/helpdesk/adapters/gateway.py`, `docs/adr/0001-*.md` a `0003-*.md` (rascunhos), `metrics/results/v2-decoupled.{csv,png}`, `docs/evidence/f05/*`.
-- Alterar: `compose.yaml` (`gateway`, `gateway-db`; `app` sem `env_file`, com `environment:`, `depends_on: gateway: service_healthy`), `.env.example` (variáveis do gateway), `app/requirements.txt` (remover `anthropic`; manter `openai` como cliente HTTP compatível do gateway), `app/helpdesk/{config,llm,main,classification,suggestion,extraction,report,tickets}.py` conforme o plano, `docs/refactoring-plan.md` (handoff, medições), `README.md` (Como rodar, componente do cliente do gateway).
+- Alterar: `compose.yaml` (`gateway`, `gateway-db`; `app` sem `env_file`, com `environment:`, `depends_on: gateway: service_healthy`), `.env.example` (variáveis do gateway), `app/requirements.txt` (remover `anthropic`; manter `openai` como cliente HTTP compatível do gateway; **fixar `pydantic==2.14.1` e `pydantic_core==2.50.1`**, ver R14), `app/helpdesk/{config,llm,main,classification,suggestion,extraction,report,tickets}.py` conforme o plano, `docs/refactoring-plan.md` (handoff, medições), `README.md` (Como rodar, componente do cliente do gateway).
 - **Proibido:** `tests/characterization/**` (nenhum byte), `provider-fake/`, `edge/`, `data/`; mudar rotas, modos de resposta ou corpos; usar modelo `mini` em qualquer capacidade.
 
 **6. Ações.**
@@ -1157,7 +1157,7 @@ git clean -ndx          # revisar antes de usar -fdx; nunca apagar .env sem quer
 |---|---|---|---|---|---|---|
 | F00 | done | feature/00-bootstrap | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/1 | 5603bf0 | docs/evidence/f00/ | CI static+e2e verdes; proteção develop + ruleset de tags `v*` (id 25008762) aplicados |
 | F01 | done | feature/01-diagnostico-v1 | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/2 | 7ef9b19 | docs/evidence/f01/ | 4 dores + large×mini; CI verde; `app/` = upstream |
-| F02 | pending | feature/02-caracterizacao | — | — | docs/evidence/f02/ | |
+| F02 | in_progress | feature/02-caracterizacao | — | — | docs/evidence/f02/ | suíte 17/17 2× contra a v1 |
 | F02-REL | pending | release/v1-coupled | — | — | tag `v1-coupled`: — | confirmação humana |
 | F03 | pending | feature/03-metrica | — | — | metrics/results/v1-coupled.* | |
 | F04 | pending | feature/04-plano-piloto | — | — | docs/evidence/f04/ | |
@@ -1203,6 +1203,7 @@ git clean -ndx          # revisar antes de usar -fdx; nunca apagar .env sem quer
 | R10 | gh sem escopo `workflow` | certo | bloqueia a F00 | ação humana na F00 |
 | R12 | Acentos em `curl -d` no Windows corrompem o corpo (400) | certo neste host | médio (falso negativo em testes/roteiros) | payloads em arquivo + `--data-binary @arq`; testes em Python (httpx) |
 | R13 | Retry do SDK cria chamadas zumbis minutos depois do 504 (observado: +5 min) | certo na v1 | alto (custo, carga) | `max_retries=0` + timeout explícito no app (F05/F06) |
+| R14 | Mensagens 422 do pydantic mudarem num rebuild da v2 (`app/requirements.txt` não fixa `pydantic`) e quebrarem a suíte idêntica | média | alto | F05 fixa `pydantic==2.14.1` e `pydantic_core==2.50.1` (versões da imagem v1) |
 | R11 | CRLF em clones Windows (`core.autocrlf=true`) quebra scripts/configs em containers | certo neste host | médio | `.gitattributes` `eol=lf` + config local (F00) |
 
 ### 8.3 Bloqueios ativos

@@ -129,7 +129,17 @@ bash scripts/diagnostics/pain4_model_swap.sh    # dor 4 (altera e restaura app/)
 python scripts/diagnostics/compare_models.py    # large × mini
 ```
 
-*Testes de caracterização (F02) e script de métrica (F03): em construção.*
+Testes de caracterização (fixam o comportamento da `v1-coupled`; rodam contra o compose, pela borda):
+
+```bash
+python -m venv .venv && source .venv/Scripts/activate   # Linux/macOS: source .venv/bin/activate
+pip install -r tests/requirements.txt
+python -m pytest tests/characterization -q
+```
+
+A suíte (`tests/characterization/`) tem 17 casos: corpo inteiro, status e `Content-Type` das 4 features, mais pelo menos um erro de entrada por feature. Cada teste começa com `POST localhost:8090/admin/reset`. As URLs podem ser trocadas com `HELPDESK_BASE_URL` e `PROVIDER_ADMIN_URL`.
+
+*Script de métrica (F03): em construção.*
 
 ## Métrica
 
