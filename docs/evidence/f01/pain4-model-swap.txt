@@ -1,0 +1,39 @@
+# Dor 4: troca de modelo da F1 (2026-10-13T15:17:20Z)
+## Estado inicial
+  app image=sha256:ba55f9b0e617c3e51819cee07de26f35ba4f9e5099c1183860634b47282ca117 started=2026-10-13T15:00:06.643786685Z
+F1 status=200
+  /admin/calls -> openai gpt-fake-large classify
+
+## 1) Editar o código: app/helpdesk/config.py:10
+diff --git a/app/helpdesk/config.py b/app/helpdesk/config.py
+index d1bca29..4679bcb 100644
+--- a/app/helpdesk/config.py
++++ b/app/helpdesk/config.py
+@@ -7,7 +7,7 @@ OPENAI_BASE_URL = "http://provider-fake:8090/openai/v1"
+ ANTHROPIC_BASE_URL = "http://provider-fake:8090/anthropic"
+ 
+ # A classificação e a extração rodam na OpenAI; a sugestão e o relatório, na Anthropic.
+-CLASSIFICATION_MODEL = "gpt-fake-large"
++CLASSIFICATION_MODEL = "gpt-fake-mini"
+ EXTRACTION_MODEL = "gpt-fake-large"
+ SUGGESTION_MODEL = "claude-fake-large"
+ REPORT_MODEL = "claude-fake-large"
+
+## 2) Só reiniciar o app NÃO troca o modelo (o código está dentro da imagem)
+$ docker compose restart app
+  app image=sha256:ba55f9b0e617c3e51819cee07de26f35ba4f9e5099c1183860634b47282ca117 started=2026-10-13T15:17:23.843269232Z
+F1 status=200
+  /admin/calls -> openai gpt-fake-large classify
+
+## 3) Rebuild + recriação do container (deploy)
+$ docker compose up -d --build --wait app
+  levou 7 s
+  app image=sha256:ccfa4c0c959fd03b61352e17442d76de406cf53f3b181041894715a4e7024b15 started=2026-10-13T15:17:32.507044925Z
+F1 status=200
+  /admin/calls -> openai gpt-fake-mini classify
+
+## 4) Restaurar app/ ao estado do repositório base
+  git diff --quiet upstream/main -- app/ -> OK (app/ idêntico ao base)
+  app image=sha256:1046826cde3b82e8f7b70b5e994050f9dffd19ab2ee6bf0c0985a99362150210 started=2026-10-13T15:17:39.340562652Z
+F1 status=200
+  /admin/calls -> openai gpt-fake-large classify

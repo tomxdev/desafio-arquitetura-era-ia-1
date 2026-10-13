@@ -1,0 +1,4 @@
+# Proteção develop
+{"approvals":0,"checks":["static","e2e"],"deletions":false,"enforce_admins":true,"force_push":false,"strict":true}
+# Ruleset de tags
+{"enforcement":"active","id":25008762,"include":["refs/tags/v*"],"name":"tags-de-marco-imutaveis","rules":["deletion","non_fast_forward","update"],"target":"tag"}

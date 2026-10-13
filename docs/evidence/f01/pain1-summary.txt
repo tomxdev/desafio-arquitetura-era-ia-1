@@ -1,0 +1,5 @@
+chamadas topics: 34 (modelo {'claude-fake-large'}, status {200})
+primeira chamada: 2026-10-13T15:03:54.862+00:00; 504 da borda em ~15:04:24.892000; última chamada terminou: 15:09:26.238000 (+331s após a primeira)
+duração média por lote: 9.7s
+tokens totais: in=222114 out=12162; custo total US$ 0.8488
+chamadas iniciadas após o 504: 30; custo dessas: US$ 0.7476 (88% do total), sem ninguém para receber o resultado

@@ -1,0 +1,7 @@
+{
+  "status": 422,
+  "content_type": "application/json",
+  "body": {
+    "detail": "A data inicial é posterior à data final"
+  }
+}

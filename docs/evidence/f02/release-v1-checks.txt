@@ -1,0 +1,9 @@
+# Gates do marco v1-coupled (2026-10-13T15:33:41Z) em de5f588 (release/v1-coupled)
+OK app/ idêntico a upstream/main
+OK provider-fake/ edge/ data/ intactos
+.env versionado: 0
+$ docker compose down -v && docker compose up -d --build --wait
+compose: up (healthy)
+{"status":"ok"} status=200
+$ python -m pytest tests/characterization -q
+17 passed in 35.43s

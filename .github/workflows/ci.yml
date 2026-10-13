@@ -1,0 +1,77 @@
+name: ci
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [main]
+
+jobs:
+  static:
+    name: static
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Áreas proibidas iguais ao repositório base
+        run: |
+          git fetch --no-tags https://github.com/devfullcycle/desafio-arquitetura-era-ia-1.git main
+          git diff --exit-code FETCH_HEAD -- provider-fake edge data
+
+      - name: Sem modelos físicos nem chaves de provider em app/ (a partir do gateway)
+        if: ${{ hashFiles('gateway/**') != '' }}
+        run: |
+          ! grep -rnE "gpt-fake|claude-fake" app/
+          ! grep -rnE "FAKE_OPENAI_KEY|FAKE_ANTHROPIC_KEY|sk-fake-openai|sk-ant-fake" app/
+
+      - uses: actions/setup-python@v5
+        if: ${{ hashFiles('metrics/requirements.txt') != '' }}
+        with:
+          python-version: "3.12"
+
+      - name: Testes do script de métrica
+        if: ${{ hashFiles('metrics/requirements.txt') != '' }}
+        run: |
+          pip install -r metrics/requirements.txt pytest
+          python -m pytest metrics/tests -q
+
+  e2e:
+    name: e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Subir o compose
+        run: |
+          cp .env.example .env
+          docker compose up -d --build --wait
+          curl -fsS localhost:8000/health
+
+      - name: Testes contra o compose
+        if: ${{ hashFiles('tests/requirements.txt') != '' }}
+        run: |
+          pip install -r tests/requirements.txt
+          dirs="tests/characterization"
+          if [ -d tests/contract ]; then dirs="$dirs tests/contract"; fi
+          python -m pytest $dirs -q
+
+      - name: Logs do compose
+        if: failure()
+        run: docker compose logs --no-color > compose-logs.txt
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: compose-logs
+          path: compose-logs.txt
+
+      - name: Derrubar o compose
+        if: always()
+        run: docker compose down -v

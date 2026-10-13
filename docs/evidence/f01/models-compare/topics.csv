@@ -1,0 +1,61 @@
+model,seconds,topic,count,examples
+gpt-fake-large,9.83,Problema no rastreio,23,TK-00001|TK-00007|TK-00008
+gpt-fake-large,9.83,Pedido extraviado,17,TK-00005|TK-00006|TK-00009
+gpt-fake-large,9.83,Troca por tamanho,11,TK-00015|TK-00039|TK-00045
+gpt-fake-large,9.83,Arrependimento de compra,10,TK-00022|TK-00034|TK-00044
+gpt-fake-large,9.83,Outros assuntos,10,TK-00003|TK-00011|TK-00017
+gpt-fake-large,9.83,Problema com boleto,10,TK-00020|TK-00027|TK-00029
+gpt-fake-large,9.83,Produto não liga,10,TK-00018|TK-00030|TK-00036
+gpt-fake-large,9.83,Defeito de fabricação,9,TK-00035|TK-00041|TK-00071
+gpt-fake-large,9.83,Estorno pendente,9,TK-00024|TK-00033|TK-00046
+gpt-fake-large,9.83,Pix não reconhecido,9,TK-00021|TK-00023|TK-00050
+gpt-fake-large,9.83,Atraso na entrega,8,TK-00010|TK-00025|TK-00028
+gpt-fake-large,9.83,Cobrança duplicada,7,TK-00058|TK-00099|TK-00102
+gpt-fake-large,9.83,Acesso à conta,6,TK-00012|TK-00014|TK-00072
+gpt-fake-large,9.83,Produto danificado,6,TK-00002|TK-00040|TK-00048
+gpt-fake-large,9.83,Cupom de desconto,5,TK-00004|TK-00107|TK-00108
+claude-fake-large,9.83,Problema no rastreio,23,TK-00001|TK-00007|TK-00008
+claude-fake-large,9.83,Pedido extraviado,17,TK-00005|TK-00006|TK-00009
+claude-fake-large,9.83,Troca por tamanho,11,TK-00015|TK-00039|TK-00045
+claude-fake-large,9.83,Arrependimento de compra,10,TK-00022|TK-00034|TK-00044
+claude-fake-large,9.83,Outros assuntos,10,TK-00003|TK-00011|TK-00017
+claude-fake-large,9.83,Problema com boleto,10,TK-00020|TK-00027|TK-00029
+claude-fake-large,9.83,Produto não liga,10,TK-00018|TK-00030|TK-00036
+claude-fake-large,9.83,Defeito de fabricação,9,TK-00035|TK-00041|TK-00071
+claude-fake-large,9.83,Estorno pendente,9,TK-00024|TK-00033|TK-00046
+claude-fake-large,9.83,Pix não reconhecido,9,TK-00021|TK-00023|TK-00050
+claude-fake-large,9.83,Atraso na entrega,8,TK-00010|TK-00025|TK-00028
+claude-fake-large,9.83,Cobrança duplicada,7,TK-00058|TK-00099|TK-00102
+claude-fake-large,9.83,Acesso à conta,6,TK-00012|TK-00014|TK-00072
+claude-fake-large,9.83,Produto danificado,6,TK-00002|TK-00040|TK-00048
+claude-fake-large,9.83,Cupom de desconto,5,TK-00004|TK-00107|TK-00108
+gpt-fake-mini,2.72,Problema no rastreio,23,TK-00001|TK-00007|TK-00008
+gpt-fake-mini,2.72,Pedido extraviado,17,TK-00005|TK-00006|TK-00009
+gpt-fake-mini,2.72,Troca por tamanho,11,TK-00015|TK-00039|TK-00045
+gpt-fake-mini,2.72,Arrependimento de compra,10,TK-00022|TK-00034|TK-00044
+gpt-fake-mini,2.72,Outros assuntos,10,TK-00003|TK-00011|TK-00017
+gpt-fake-mini,2.72,Problema com boleto,10,TK-00020|TK-00027|TK-00029
+gpt-fake-mini,2.72,Produto não liga,10,TK-00018|TK-00030|TK-00036
+gpt-fake-mini,2.72,Defeito de fabricação,9,TK-00035|TK-00041|TK-00071
+gpt-fake-mini,2.72,Estorno pendente,9,TK-00024|TK-00033|TK-00046
+gpt-fake-mini,2.72,Pix não reconhecido,9,TK-00021|TK-00023|TK-00050
+gpt-fake-mini,2.72,Atraso na entrega,8,TK-00010|TK-00025|TK-00028
+gpt-fake-mini,2.72,Cobrança duplicada,7,TK-00058|TK-00099|TK-00102
+gpt-fake-mini,2.72,Acesso à conta,6,TK-00012|TK-00014|TK-00072
+gpt-fake-mini,2.72,Produto danificado,6,TK-00002|TK-00040|TK-00048
+gpt-fake-mini,2.72,Cupom de desconto,5,TK-00004|TK-00107|TK-00108
+claude-fake-mini,2.72,Problema no rastreio,23,TK-00001|TK-00007|TK-00008
+claude-fake-mini,2.72,Pedido extraviado,17,TK-00005|TK-00006|TK-00009
+claude-fake-mini,2.72,Troca por tamanho,11,TK-00015|TK-00039|TK-00045
+claude-fake-mini,2.72,Arrependimento de compra,10,TK-00022|TK-00034|TK-00044
+claude-fake-mini,2.72,Outros assuntos,10,TK-00003|TK-00011|TK-00017
+claude-fake-mini,2.72,Problema com boleto,10,TK-00020|TK-00027|TK-00029
+claude-fake-mini,2.72,Produto não liga,10,TK-00018|TK-00030|TK-00036
+claude-fake-mini,2.72,Defeito de fabricação,9,TK-00035|TK-00041|TK-00071
+claude-fake-mini,2.72,Estorno pendente,9,TK-00024|TK-00033|TK-00046
+claude-fake-mini,2.72,Pix não reconhecido,9,TK-00021|TK-00023|TK-00050
+claude-fake-mini,2.72,Atraso na entrega,8,TK-00010|TK-00025|TK-00028
+claude-fake-mini,2.72,Cobrança duplicada,7,TK-00058|TK-00099|TK-00102
+claude-fake-mini,2.72,Acesso à conta,6,TK-00012|TK-00014|TK-00072
+claude-fake-mini,2.72,Produto danificado,6,TK-00002|TK-00040|TK-00048
+claude-fake-mini,2.72,Cupom de desconto,5,TK-00004|TK-00107|TK-00108
