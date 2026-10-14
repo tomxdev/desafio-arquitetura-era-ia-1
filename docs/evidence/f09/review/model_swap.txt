@@ -1,0 +1,13 @@
+# Troca de modelo (2026-10-14T04:17:13Z)
+antes: F1 status=200 | /admin/calls: gpt-fake-large:200 | app iniciado em 2026-10-14T04:16:55.304133479Z
+## 1) editar gateway/config.yaml (helpdesk-classify: openai/gpt-fake-large → openai/gpt-fake-mini)
+    -    litellm_params: {model: openai/gpt-fake-large, api_base: http://provider-fake:8090/openai/v1, api_key: os.environ/FAKE_OPENAI_KEY, timeout: 4}
+    +    litellm_params: {model: openai/gpt-fake-mini, api_base: http://provider-fake:8090/openai/v1, api_key: os.environ/FAKE_OPENAI_KEY, timeout: 4}
+## 2) docker compose restart gateway
+depois: F1 status=200 | /admin/calls: gpt-fake-mini:200 | app iniciado em 2026-10-14T04:16:55.304133479Z
+  OK    F1 responde 200
+  OK    próxima chamada usa gpt-fake-mini
+  OK    app NÃO foi reiniciado (StartedAt igual)
+## 3) desfazer (git checkout -- gateway/config.yaml + restart do gateway)
+  OK    de volta a gpt-fake-large
+RESULTADO: OK

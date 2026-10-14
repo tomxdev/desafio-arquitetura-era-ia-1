@@ -268,11 +268,11 @@ O que cada feature faz quando **não há nenhum modelo `large` disponível** (os
 | Feature | Comportamento | Resposta | Status | Por quê |
 |---|---|---|---|---|
 | F1 Classificar | responde com `gpt-fake-mini` | `{"ticket_id", "category", "priority"}` (na amostra, igual ao `large`) | 200 | cliente esperando; mini idêntico em 40/40 |
-| F2 Sugerir | responde com `claude-fake-mini` | `{"ticket_id", "suggestion"}`, texto mais curto (~44%) | 200 | atendente revisa e edita; um rascunho menor é melhor que nada |
-| F3 Relatório | cada lote responde com `claude-fake-mini` | relatório completo | 200 | painel interno; mini idêntico no lote amostrado |
+| F2 Sugerir | responde com `claude-fake-mini` | stream SSE normal (`data: {"chunk"}` … `event: end`), texto mais curto (~44%) | 200 | atendente revisa e edita; um rascunho menor é melhor que nada |
+| F3 Relatório | cada lote responde com `claude-fake-mini` | `202` no pedido; o status chega a `303` e o resultado traz o relatório completo | 202 → 303 → 200 | painel interno; mini idêntico no lote amostrado |
 | F4 Extrair | **falha explícita**, sem modelo fraco | `{"detail": "Capacidade helpdesk-extract indisponível: nenhum modelo disponível (gateway respondeu 500)"}` | **503** | automação sem revisão humana; o mini trocou o pedido pela nota fiscal em 4/40, em formato válido |
 
-Se nenhum destino responder (os dois providers inteiros fora), qualquer feature responde `503` com o mesmo formato de `detail` (F1: 7,3 s, [evidência](docs/evidence/f06/all-down.txt)). O mesmo `503` vale quando a chave do app estoura o orçamento ou o limite de requisições.
+Se nenhum destino responder (os dois providers inteiros fora), F1, F2 e F4 respondem `503` com o mesmo formato de `detail` (F1: 7,3 s, [evidência](docs/evidence/f06/all-down.txt); F2 antes do 1º trecho, coberto em `tests/contract`), e a tarefa da F3 termina em `failed` com o mesmo motivo. O mesmo `503` vale quando a chave do app estoura o orçamento ou o limite de requisições.
 
 ## Fluxos
 
@@ -293,7 +293,7 @@ curl -s -X POST localhost:8000/tickets/classification -H "Content-Type: applicat
 # 200 {"ticket_id":"TK-00042","category":"delivery","priority":"high"}
 ```
 
-**F2 (streaming SSE)**: `Content-Type: text/event-stream`; consumir com `curl -N` (ou `EventSource`/leitor de stream).
+**F2 (streaming SSE)**: `Content-Type: text/event-stream`; consumir com `curl -N` ou, no navegador, com `fetch()` lendo `response.body` (o `EventSource` nativo só faz `GET` e não serve para esta rota, que é `POST` com corpo JSON).
 
 ```bash
 curl -N -X POST localhost:8000/tickets/reply-suggestion -H "Content-Type: application/json" \

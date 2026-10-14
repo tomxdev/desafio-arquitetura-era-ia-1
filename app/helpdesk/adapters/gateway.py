@@ -45,10 +45,14 @@ class GatewayClient(LLMGateway):
 def _text(capability: str, chunks) -> Iterator[str]:
     # Falha no meio do stream: o gateway envia um evento de erro (o SDK levanta APIError) ou a
     # conexão cai/expira (httpx2). Nos dois casos, o texto parcial já foi entregue.
-    with _translated_errors(capability, interrupted=True):
-        for chunk in chunks:
-            if chunk.choices and chunk.choices[0].delta.content:
-                yield chunk.choices[0].delta.content
+    # O SDK só fecha a resposta quando a iteração chega ao fim; se o cliente desiste antes, fecha aqui.
+    try:
+        with _translated_errors(capability, interrupted=True):
+            for chunk in chunks:
+                if chunk.choices and chunk.choices[0].delta.content:
+                    yield chunk.choices[0].delta.content
+    finally:
+        chunks.close()
 
 
 class _translated_errors:

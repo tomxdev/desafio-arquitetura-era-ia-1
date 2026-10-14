@@ -51,7 +51,7 @@ Uma chamada a LLM demora segundos, custa por token, chega aos poucos e prende co
 
 - Nenhuma feature depende mais de terminar em 30 s: F1/F4 terminam em ~1 s (ou em `503` em ≤ 12 s), F2 envia o primeiro byte em < 1 s, F3 responde o pedido em milissegundos.
 - F2 mantém uma conexão aberta por ~16 s por sugestão (custo aceito: é o que dá ao atendente texto para ler já no primeiro segundo). Cancelar a geração quando o cliente fecha o stream está fora de escopo.
-- F3 passa a ter estado: tarefas em memória (perdidas num reinício do app, fora de escopo), polling pelo cliente e dois endpoints novos. Pedidos repetidos para o mesmo período geram tarefas independentes (deduplicar está fora de escopo).
+- F3 passa a ter estado: tarefas em memória (perdidas num reinício do app, fora de escopo), polling pelo cliente e dois endpoints novos. Pedidos repetidos para o mesmo período geram tarefas independentes (deduplicar está fora de escopo). Também não há limite para tarefas na fila nem para as concluídas guardadas em memória: com pedidos acima da vazão do pool (2 tarefas por vez), a fila e a memória crescem. É uma limitação aceita para o volume do helpdesk (um relatório por período, pedido por pessoas); limitar a fila (recusando com `429`/`503` antes do `202`) e expirar resultados é a evolução natural se a F3 virar API pública.
 - O contrato HTTP de F2 e F3 mudou: a suíte de caracterização da `main` consome SSE e polling, e continua comparando o conteúdo com os goldens da `v1-coupled` (que permanecem iguais nas tags).
 
 ## Evidência
