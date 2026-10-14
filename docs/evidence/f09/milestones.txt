@@ -1,0 +1,30 @@
+# Comandos da seção 3.6 (2026-10-14T02:55:21Z)
+++ git diff --quiet upstream/main v1-coupled -- app/
+++ echo $'app/ id\303\252ntico ao base'
+app/ idêntico ao base
+++ git diff --exit-code v1-coupled v2-decoupled -- tests/characterization/
+++ echo $'su\303\255te id\303\252ntica'
+suíte idêntica
+++ git diff --quiet upstream/main origin/main -- provider-fake/ edge/ data/
+++ echo $'\303\241reas proibidas intactas (main)'
+áreas proibidas intactas (main)
+++ git diff --quiet upstream/main origin/release/final -- provider-fake/ edge/ data/
+++ echo $'\303\241reas proibidas intactas (release/final)'
+áreas proibidas intactas (release/final)
+++ git ls-remote --tags origin
+4664689873bcfd16238dff37609b3c01a54df0f9	refs/tags/v1-coupled
+fae6db47eb838e0a74022f324188ab9a8a39829a	refs/tags/v1-coupled^{}
+f41185bfd2d812e58e293df09df110fd5a1f23a8	refs/tags/v2-decoupled
+1ece5e00a158a1f5972188d79d89e59bbf7ac872	refs/tags/v2-decoupled^{}
+++ git rev-parse 'v1-coupled^{commit}' 'v2-decoupled^{commit}'
+fae6db47eb838e0a74022f324188ab9a8a39829a
+1ece5e00a158a1f5972188d79d89e59bbf7ac872
+++ git cat-file -t v1-coupled
+tag
+++ git cat-file -t v2-decoupled
+tag
+++ git merge-base --is-ancestor v1-coupled v2-decoupled
+++ git merge-base --is-ancestor v2-decoupled origin/main
+++ git merge-base --is-ancestor origin/main origin/release/final
+++ echo $'v1 \342\212\202 v2 \342\212\202 main \342\212\202 release/final'
+v1 ⊂ v2 ⊂ main ⊂ release/final

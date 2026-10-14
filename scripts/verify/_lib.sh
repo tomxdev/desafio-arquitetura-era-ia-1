@@ -59,6 +59,20 @@ feature() {
   echo "$status $total"
 }
 
+# Começa de um stack quieto: as tarefas de relatório ficam em memória no app e continuam depois que
+# o cliente vai embora (ex.: o teste de contrato da F3 deixa o relatório do mês rodando ~5 min), e
+# requisições já enviadas ao gateway terminam mesmo após o app reiniciar. Sem isso, chamadas alheias
+# entram no /admin/calls do roteiro. Reinicia o app e espera o /admin/calls ficar 15 s sem crescer.
+quiesce() {
+  local before after stable=0
+  docker compose restart app >/dev/null 2>&1; docker compose up -d --wait app >/dev/null 2>&1
+  before=$(call_count)
+  while [ "$stable" -lt 15 ]; do
+    sleep 3; after=$(call_count)
+    if [ "$after" = "$before" ]; then stable=$((stable + 3)); else stable=0; before=$after; fi
+  done
+}
+
 check() { # descrição condição(0/1)
   if [ "$2" = 0 ]; then echo "  OK    $1"; else echo "  FALHA $1"; FAILURES=$((FAILURES + 1)); fi
 }

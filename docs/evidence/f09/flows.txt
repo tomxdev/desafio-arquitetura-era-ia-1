@@ -1,0 +1,62 @@
+# Fluxos pela borda (2026-10-14T03:28:06Z)
+## F1 síncrono (5 execuções; limite 3 s)
+F1 #1: status=200 total=1.122257s corpo={"ticket_id":"TK-00042","category":"delivery","priority":"high"}
+  OK    F1 #1 em até 3 s
+F1 #2: status=200 total=1.092050s corpo={"ticket_id":"TK-00042","category":"delivery","priority":"high"}
+  OK    F1 #2 em até 3 s
+F1 #3: status=200 total=1.090728s corpo={"ticket_id":"TK-00042","category":"delivery","priority":"high"}
+  OK    F1 #3 em até 3 s
+F1 #4: status=200 total=1.091583s corpo={"ticket_id":"TK-00042","category":"delivery","priority":"high"}
+  OK    F1 #4 em até 3 s
+F1 #5: status=200 total=1.091598s corpo={"ticket_id":"TK-00042","category":"delivery","priority":"high"}
+  OK    F1 #5 em até 3 s
+## F2 streaming: curl -N, com o tempo de cada linha desde o pedido
+status=200 Content-Type: text/event-stream; charset=utf-8 | 1º trecho em 0.85s | fim em 16.19s | 606 trechos
+    0.85 data: {"chunk": "Olá!"}
+    0.87 data: {"chunk": " Sin"}
+    0.89 data: {"chunk": "to m"}
+    ...
+    16.19 event: end
+    16.19 data: {"ticket_id": "TK-00042"}
+  OK    F2 1º trecho em até 1,5 s
+  OK    F2 1º trecho antes da metade do total
+  OK    F2 termina com event: end
+## F2 com o primário (claude-fake-large) em midstream_error
+status=200 | 151 trechos antes da falha | fim do stream:
+    event: error
+    data: {"ticket_id": "TK-00042", "message": "A geração foi interrompida"}
+    
+  OK    F2 recebe event: error no formato do contrato
+    /admin/calls: claude-fake-large:500
+## F1 com o provider primário (openai) em timeout (limite 15 s)
+F1: status=200 total=5.111345s | /admin/calls: gpt-fake-large:504 claude-fake-large:200
+  OK    F1 responde em até 15 s
+## F4 sem nenhum modelo large
+F4: status=503 total=4.693144s corpo={"detail":"Capacidade helpdesk-extract indisponível: nenhum modelo disponível (gateway respondeu 500)"}
+  OK    F4 → 503 explícito
+## F3 com os dois providers inteiros em error_500 (limite 60 s para failed)
+    +0.07s 200 {"state":"running","progress":"0/5000"}
+    +1.38s 200 {"state":"running","progress":"0/5000"}
+    +2.69s 200 {"state":"running","progress":"0/5000"}
+    +4.01s 200 {"state":"running","progress":"0/5000"}
+    +5.30s 200 {"state":"running","progress":"0/5000"}
+    +6.60s 200 {"state":"failed","reason":"Capacidade helpdesk-topics indisponível: nenhum modelo disponível (gateway respondeu 500)"}
+  OK    F3 chega a failed com motivo
+  OK    F3 failed em até 60 s
+## F3 mês inteiro (2026-08-01 a 2026-08-31), modo normal
+pedido: status=202 em 0.07s | location: /reports/topics/status/6fbade487687 retry-after: 5 | corpo={"job_id":"6fbade487687","state":"pending"}
+  OK    F3 aceita em até 1 s (202)
+    +0.06s 200 {"state":"running","progress":"0/5000"}
+    +61.26s 200 {"state":"running","progress":"900/5000"}
+    +122.50s 200 {"state":"running","progress":"1800/5000"}
+    +183.71s 200 {"state":"running","progress":"2700/5000"}
+    +244.97s 200 {"state":"running","progress":"3750/5000"}
+    +306.20s 200 {"state":"running","progress":"4650/5000"}
+    +336.81s 303 
+resultado (/reports/topics/6fbade487687): status=200 total_tickets=5000 | chamadas topics 200 em /admin/calls: 34
+  OK    relatório do mês com total_tickets = 5000
+  OK    34 chamadas topics registradas em /admin/calls
+## Nenhum 504 da borda
+status observados: 200 200 200 200 200 200 200 200 503 200 200 200 200 200 200 202 200
+  OK    nenhuma resposta 504
+RESULTADO: OK

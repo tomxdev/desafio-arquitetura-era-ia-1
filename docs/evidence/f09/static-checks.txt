@@ -1,0 +1,52 @@
+# Verificações estáticas e de ambiente no clone limpo (2026-10-14T02:55:58Z), commit 5144183
+++ grep -rE 'gpt-fake|claude-fake' app/
+++ echo 'AC-GW-01: vazio'
+AC-GW-01: vazio
+++ grep -rE 'FAKE_OPENAI_KEY|FAKE_ANTHROPIC_KEY|sk-fake-openai|sk-ant-fake' app/
+++ echo 'AC-GW-02 grep: vazio'
+AC-GW-02 grep: vazio
+++ docker compose exec -T app env
+++ grep -E 'FAKE_|sk-fake|sk-ant'
+++ echo 'AC-GW-02 env do app: sem chaves de provider'
+AC-GW-02 env do app: sem chaves de provider
+++ docker compose exec -T app env
+++ grep -E '^GATEWAY_'
+++ sed -E 's/(KEY=sk-[a-z]+).*/\1-****/'
+GATEWAY_API_KEY=sk-helpdesk-****
+GATEWAY_BASE_URL=http://gateway:4000
+++ docker compose config --format json
+++ python -c 'import sys,json; a=json.load(sys.stdin)['\''services'\'']['\''app'\'']; print('\''env_file:'\'', a.get('\''env_file'\'')); print('\''environment:'\'', sorted(a.get('\''environment'\'',{}))); print('\''volumes:'\'', [v.get('\''source'\'') for v in a.get('\''volumes'\'',[])])'
+env_file: None
+environment: ['GATEWAY_API_KEY', 'GATEWAY_BASE_URL']
+volumes: ['C:\\dev\\f09-fresh\\fresh\\data']
+++ grep -rnE 'provider-fake|8090' app/
+++ echo $'RS-02: app n\303\243o referencia o provider-fake'
+RS-02: app não referencia o provider-fake
+++ grep -rniE 'cache|circuit|rag\b|guardrail' app/ gateway/
+app/.dockerignore:1:__pycache__
+app/Dockerfile:5:RUN pip install --no-cache-dir -r requirements.txt
+app/helpdesk/main.py:62:                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+gateway/config.yaml:76:  # fica determinístico e é o que o README declara (circuit breaker está fora de escopo).
+++ docker compose exec -T app python --version
+Python 3.12.15
+++ docker compose exec -T app pip show fastapi
+++ head -2
+Name: fastapi
+Version: 0.115.6
+++ grep -n '^FROM' app/Dockerfile
+1:FROM python:3.12-slim
+++ grep -E '^[A-Z_]+=' .env.example
+++ sed -E 's/=.*/=<fake>/'
+FAKE_OPENAI_KEY=<fake>
+FAKE_ANTHROPIC_KEY=<fake>
+LITELLM_MASTER_KEY=<fake>
+HELPDESK_GATEWAY_KEY=<fake>
+GATEWAY_DEMO_BUDGET_KEY=<fake>
+GATEWAY_DEMO_RPM_KEY=<fake>
+GATEWAY_DB_PASSWORD=<fake>
+++ docker compose config --images
+fresh-provider-fake
+nginx:1.27-alpine
+fresh-app
+ghcr.io/berriai/litellm:v1.102.1
+postgres:16-alpine
