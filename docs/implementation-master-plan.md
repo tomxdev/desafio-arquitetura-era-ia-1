@@ -1167,7 +1167,7 @@ git clean -ndx          # revisar antes de usar -fdx; nunca apagar .env sem quer
 | F06 | done | feature/06-governanca-resiliencia | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/11 | 691151c | docs/evidence/f06/ | governance/fallback/model_swap OK a partir de down -v; rotação de chave OK; ADRs 0004/0005/0006/0009 |
 | F07 | done | feature/07-fluxos | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/12 | dcdb758 | docs/evidence/f07/ | flows.sh OK (F1 1,09 s; F2 1º trecho 0,85 s; F3 aceite 0,07 s, mês 5000; failed 7,7 s); contract 8 passed |
 | F08 | done | feature/08-adrs-docs | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/13 | 5290ebf | docs/evidence/f08/ | main só com `schemas` na zona de dor (exceção no ADR 0008); 9 ADRs aceitos nos 3 níveis; README com 10 seções; roteiros reexecutados OK; corrigida colisão de `conftest` (R18) |
-| F09 | in_progress | release/final | correção: https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/14 | 250ad8c | docs/evidence/f09/ | clone limpo OK após a correção do quiesce (R19); matriz 92/93 (falta ST-01: main final); aguardando confirmação humana do merge na main |
+| F09 | in_progress | release/final | correções: #14 (250ad8c), #16 (revisão do CodeRabbit no #15) | — | docs/evidence/f09/ | clone limpo OK após a correção do quiesce (R19); revisão do #15: 10 de 12 comentários aceitos (pins e limite de fila recusados com justificativa); matriz 92/93 (falta ST-01: main final); aguardando confirmação humana do merge na main |
 
 ---
 
