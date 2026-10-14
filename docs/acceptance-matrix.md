@@ -21,7 +21,7 @@
 | ID | Critério | Fase | Verificação | Evidência | Status |
 |---|---|---|---|---|---|
 | AC-MET-01 | `metrics/results/` contém, para `v1-coupled`, `v2-decoupled` e `main`, CSV com cabeçalho `component,ca,ce,i,a,d` e gráfico A × I com a Main Sequence | F03 (v1), F05 (v2), F08 (main) | S: `for v in v1-coupled v2-decoupled main; do head -1 metrics/results/$v.csv \| grep -qx 'component,ca,ce,i,a,d' && test -f metrics/results/$v.png && echo $v OK; done`; revisão visual: reta A+I=1 | `metrics/results/*.csv`, `*.png` | done (v1, v2 e main versionadas) |
-| AC-MET-02 | Rodar o script da `main` sobre um checkout da `v1-coupled` reproduz o CSV versionado | F03, F09 | S: `git worktree add ../v1 v1-coupled && python metrics/coupling.py ../v1/app/helpdesk --name chk --out-dir /tmp/chk && diff /tmp/chk/chk.csv metrics/results/v1-coupled.csv; git worktree remove ../v1` | `docs/evidence/f09/metric-repro.txt` | in_progress (reproduz na F03; reexecução na F09) |
+| AC-MET-02 | Rodar o script da `main` sobre um checkout da `v1-coupled` reproduz o CSV versionado | F03, F09 | S: `git worktree add ../v1 v1-coupled && python metrics/coupling.py ../v1/app/helpdesk --name chk --out-dir /tmp/chk && diff /tmp/chk/chk.csv metrics/results/v1-coupled.csv; git worktree remove ../v1` | `docs/evidence/f09/metric-repro.txt` | done (três CSVs reproduzidos no clone limpo) |
 | AC-MET-03 | Os CSVs seguem a régua do req. 3, e a medição da `v1-coupled` bate com a recalculada pelo avaliador | F03 | `pytest metrics/tests -q` (inclui o teste de oráculo da tabela 1.1 do plano); conferência manual de 3 módulos | `docs/evidence/f03/{pytest-metrics.txt,manual-check.md}` | done |
 | AC-MET-04 | Na `main`, nenhum componente na zona de dor (A<0,5, I<0,5 e D≥0,5), exceto os declarados no ADR da métrica como estáveis por natureza, com justificativa; o componente que chama o gateway e as features não podem ser exceção | F08 | S: script de zona de dor (F08, ação 2) × lista do ADR 0008 | `docs/evidence/f08/pain-zone-check.txt`, `docs/adr/0008-*.md` | done (só `schemas`, exceção aceita no ADR 0008) |
 | AC-MET-05 | Na `main`, o código que chama o gateway fica em um único componente de `app/`, identificado no README; nenhuma feature o importa; só o ponto de composição depende dele | F05, F08 | S: `grep -rlnE "^(import\|from) (openai\|httpx\|anthropic\|requests)" app/helpdesk` → só `adapters/gateway.py`; `grep -rnE "adapters(\.gateway\| import gateway)" app/helpdesk \| grep -v main.py` → vazio; métrica: Ca do adaptador = {main}; README cita o componente | `docs/evidence/f08/gateway-client-check.txt` | done (só `adapters/gateway.py`; importado só por `main`) |
@@ -37,8 +37,8 @@
 
 | ID | Critério | Fase | Verificação | Evidência | Status |
 |---|---|---|---|---|---|
-| AC-GW-01 | `grep -rE "gpt-fake\|claude-fake" app/` não retorna nada na `main` | F05 (mantido até F09) | S: `! grep -rE "gpt-fake\|claude-fake" app/` (também no CI `static`) | `docs/evidence/f05/greps.txt`, `docs/evidence/f09/matrix-run.md` | in_progress (v2 ok; manter até a main) |
-| AC-GW-02 | `grep -rE "FAKE_OPENAI_KEY\|FAKE_ANTHROPIC_KEY\|sk-fake-openai\|sk-ant-fake" app/` vazio; `docker compose exec app env` sem as chaves; a definição do `app` em `docker compose config` não recebe essas chaves por variável, `env_file` ou arquivo montado | F05 | S: grep; `docker compose exec app env \| grep -E "FAKE_\|sk-fake\|sk-ant"` (vazio); `docker compose config --format json` → bloco `app` sem `env_file`, sem as chaves, volumes só `./data` | `docs/evidence/f05/{greps.txt,app-env.txt,compose-config-app.json}` | in_progress (v2 ok; manter até a main) |
+| AC-GW-01 | `grep -rE "gpt-fake\|claude-fake" app/` não retorna nada na `main` | F05 (mantido até F09) | S: `! grep -rE "gpt-fake\|claude-fake" app/` (também no CI `static`) | `docs/evidence/f05/greps.txt`, `docs/evidence/f09/matrix-run.md` | done (vazio na main; clone limpo) |
+| AC-GW-02 | `grep -rE "FAKE_OPENAI_KEY\|FAKE_ANTHROPIC_KEY\|sk-fake-openai\|sk-ant-fake" app/` vazio; `docker compose exec app env` sem as chaves; a definição do `app` em `docker compose config` não recebe essas chaves por variável, `env_file` ou arquivo montado | F05 | S: grep; `docker compose exec app env \| grep -E "FAKE_\|sk-fake\|sk-ant"` (vazio); `docker compose config --format json` → bloco `app` sem `env_file`, sem as chaves, volumes só `./data` | `docs/evidence/f05/{greps.txt,app-env.txt,compose-config-app.json}` | done (v2 e main; env e config do app sem chaves) |
 | AC-GW-03 | Seguindo o README, trocar o modelo físico de uma capacidade exige alterar só a config do gateway e reiniciar só o `gateway`; a próxima chamada aparece em `/admin/calls` com o novo modelo, e o `app` não foi reiniciado | F06 | S: `bash scripts/verify/model_swap.sh` (edita `gateway/config.yaml`, `docker compose restart gateway`, chama a feature, confere o modelo em `/admin/calls`, compara `StartedAt` do app antes/depois, reverte) | `docs/evidence/f06/model-swap.txt` | done |
 | AC-GW-04 | O roteiro de governança do README mostra uma recusa por orçamento e outra por limite de requisições, e o número de chamadas em `/admin/calls` não aumenta com as recusas | F06 | S: `bash scripts/verify/governance.sh` (contagens antes/depois de cada recusa) | `docs/evidence/f06/governance.txt` | done |
 | AC-GW-05 | Com o provider primário de uma capacidade em `error_500`, a feature responde com sucesso, e `/admin/calls` mostra as tentativas no primário (≤ máximo declarado no README) seguidas do sucesso no destino equivalente do outro provider | F06 | S: `bash scripts/verify/fallback.sh` (as 4 capacidades) | `docs/evidence/f06/fallback-*.json` | done |
@@ -70,8 +70,8 @@
 | ID | Critério | Fase | Verificação | Evidência | Status |
 |---|---|---|---|---|---|
 | AC-RDM-01 | O README contém todas as seções listadas em Entregável | F08 | S: loop das 10 seções (F08, seção 8) | `docs/evidence/f08/readme-sections.txt` | done (10 seções, sem marcadores *em construção*) |
-| AC-RDM-02 | `cp .env.example .env && docker compose up -d --build --wait` na `main` sobe tudo, e `curl -s localhost:8000/health` logo em seguida retorna 200, sem passos manuais | F09 | S: clone limpo da `main` | `docs/evidence/f09/fresh-clone.log` | pending |
-| AC-RDM-03 | `provider-fake/`, `edge/` e `data/` não foram alterados | todas (CI `static`), F09 | S: `git remote add upstream https://github.com/devfullcycle/desafio-arquitetura-era-ia-1.git; git fetch -q upstream main && git fetch -q origin && git diff --quiet upstream/main origin/main -- provider-fake/ edge/ data/` (num clone limpo, `upstream` e `main` local não existem) | `docs/evidence/f09/matrix-run.md` | pending |
+| AC-RDM-02 | `cp .env.example .env && docker compose up -d --build --wait` na `main` sobe tudo, e `curl -s localhost:8000/health` logo em seguida retorna 200, sem passos manuais | F09 | S: clone limpo da `main` | `docs/evidence/f09/fresh-clone.log` | done (clone limpo: um comando, /health 200) |
+| AC-RDM-03 | `provider-fake/`, `edge/` e `data/` não foram alterados | todas (CI `static`), F09 | S: `git remote add upstream https://github.com/devfullcycle/desafio-arquitetura-era-ia-1.git; git fetch -q upstream main && git fetch -q origin && git diff --quiet upstream/main origin/main -- provider-fake/ edge/ data/` (num clone limpo, `upstream` e `main` local não existem) | `docs/evidence/f09/matrix-run.md` | done (sem diff contra upstream/main) |
 | AC-RDM-04 | Todo serviço do compose além de `provider-fake`, `edge`, `app` e `gateway` tem um ADR que o justifica a partir de um requisito | F05, F08 | S: `docker compose config --services` × ADRs (ex.: `gateway-db` → ADR 0003; `gateway-init` → ADR 0010, se existir) | `docs/evidence/f08/services-vs-adr.txt` | done (único serviço extra: gateway-db → ADR 0003; revalidado na F08) |
 
 ## 2. Requisitos (tarefas que não aparecem literalmente nos critérios)
@@ -109,15 +109,15 @@
 
 | ID | Restrição | Fase | Verificação | Evidência | Status |
 |---|---|---|---|---|---|
-| RS-01 | `provider-fake/`, `edge/`, `data/` não alterados | todas | CI `static` + AC-RDM-03 | CI + `docs/evidence/f09/` | pending |
-| RS-02 | Na v2 e na main, toda chamada a modelo passa pelo gateway; `app/` não chama o provider-fake | F05+ | `! grep -rn "provider-fake\|8090" app/`; `/admin/calls` só com chamadas originadas pelo gateway (logs do gateway) | `docs/evidence/f05/greps.txt` | in_progress (v2 ok) |
-| RS-03 | Na v2 e na main, `FAKE_OPENAI_KEY`/`FAKE_ANTHROPIC_KEY` fora de `app/` e do ambiente do `app` | F05+ | AC-GW-02 (nas duas: checkout da tag v2 e main) | `docs/evidence/f05/`, `docs/evidence/f09/` | in_progress (v2 ok) |
-| RS-04 | Refatorar o `app/` existente; sem reescrever do zero nem trocar de linguagem; Python 3.12 + FastAPI | F04–F07 | revisão do histórico (`git log --stat app/`): commits incrementais; `app/Dockerfile` em `python:3.12-*`; `fastapi` em `requirements.txt` | `docs/refactoring-plan.md` | in_progress (refatoração incremental, 8 commits) |
+| RS-01 | `provider-fake/`, `edge/`, `data/` não alterados | todas | CI `static` + AC-RDM-03 | CI + `docs/evidence/f09/` | done (CI static + clone limpo) |
+| RS-02 | Na v2 e na main, toda chamada a modelo passa pelo gateway; `app/` não chama o provider-fake | F05+ | `! grep -rn "provider-fake\|8090" app/`; `/admin/calls` só com chamadas originadas pelo gateway (logs do gateway) | `docs/evidence/f05/greps.txt` | done |
+| RS-03 | Na v2 e na main, `FAKE_OPENAI_KEY`/`FAKE_ANTHROPIC_KEY` fora de `app/` e do ambiente do `app` | F05+ | AC-GW-02 (nas duas: checkout da tag v2 e main) | `docs/evidence/f05/`, `docs/evidence/f09/` | done (v2: F05; main: F09) |
+| RS-04 | Refatorar o `app/` existente; sem reescrever do zero nem trocar de linguagem; Python 3.12 + FastAPI | F04–F07 | revisão do histórico (`git log --stat app/`): commits incrementais; `app/Dockerfile` em `python:3.12-*`; `fastapi` em `requirements.txt` | `docs/refactoring-plan.md` | done (8 commits incrementais em app/; Python 3.12 + FastAPI) |
 | RS-05 | Mesma régua de métrica nas três medições | F03, F05, F08 | mesmo `metrics/coupling.py` (sem mudança de régua entre medições: `git log -p metrics/coupling.py` revisado) | `docs/evidence/f09/metric-repro.txt` | done (mesmo `metrics/coupling.py` nas três medições) |
-| RS-06 | Avaliação sem provider real nem serviço externo além das imagens públicas do compose | F09 | clone limpo sem rede para APIs reais; `.env.example` só com chaves fake | `docs/evidence/f09/fresh-clone.log` | pending |
+| RS-06 | Avaliação sem provider real nem serviço externo além das imagens públicas do compose | F09 | clone limpo sem rede para APIs reais; `.env.example` só com chaves fake | `docs/evidence/f09/fresh-clone.log` | done (só chaves fake e imagens públicas) |
 | RS-07 | Serviço adicional (além de `app` e `gateway`) tem ADR justificando por requisito | F05, F08 | AC-RDM-04 | `docs/evidence/f08/services-vs-adr.txt` | done (gateway-db → ADR 0003) |
-| RS-08 | Limitação real do gateway documentada no ADR e resolvida na aplicação | F06, F07 | revisão dos ADRs 0006/0009 (seção "Limitações") | `docs/adr/` | in_progress (timeout não cancela a geração no provider: ADR 0009) |
-| RS-09 | Fora de escopo não implementado sem necessidade (cache, RAG, circuit breaker, guardrails, evals, auth) | todas | revisão: `grep -rniE "cache\|circuit\|rag" app/ gateway/` justificado ou vazio | `docs/evidence/f09/matrix-run.md` | pending |
+| RS-08 | Limitação real do gateway documentada no ADR e resolvida na aplicação | F06, F07 | revisão dos ADRs 0006/0009 (seção "Limitações") | `docs/adr/` | done (sem fallback no meio do stream: ADR 0007, resolvido com event: error) |
+| RS-09 | Fora de escopo não implementado sem necessidade (cache, RAG, circuit breaker, guardrails, evals, auth) | todas | revisão: `grep -rniE "cache\|circuit\|rag" app/ gateway/` justificado ou vazio | `docs/evidence/f09/matrix-run.md` | done (só ocorrências justificadas) |
 
 ## 4. Tecnologias obrigatórias
 
@@ -126,15 +126,15 @@
 | TC-01 | Docker e Docker Compose v2 | F00 | `docker compose version` | `docs/evidence/f00/host-versions.txt` | done |
 | TC-02 | Git, com as tags publicadas no fork | F02, F05, F09 | `git ls-remote --tags origin` | `docs/evidence/f09/tags.txt` | done |
 | TC-03 | AI Gateway self-hosted como serviço `gateway` (não SaaS) | F05 | `docker compose config --services` contém `gateway`; imagem pública | `compose.yaml` | done |
-| TC-04 | App em Python 3.12 com FastAPI | F05–F09 | `docker compose exec app python --version`; `pip show fastapi` | `docs/evidence/f09/matrix-run.md` | pending |
+| TC-04 | App em Python 3.12 com FastAPI | F05–F09 | `docker compose exec app python --version`; `pip show fastapi` | `docs/evidence/f09/matrix-run.md` | done (Python 3.12.15, FastAPI 0.115.6) |
 
 ## 5. Estrutura obrigatória e entregável
 
 | ID | Item | Fase | Verificação | Evidência | Status |
 |---|---|---|---|---|---|
-| ST-01 | Fork público no GitHub com a versão final na `main` | F00, F09 | `gh repo view tomxdev/desafio-arquitetura-era-ia-1 --json visibility,isFork,parent` | `docs/evidence/f09/repo-visibility.txt` | in_progress (fork público criado na F00; `main` final na F09) |
+| ST-01 | Fork público no GitHub com a versão final na `main` | F00, F09 | `gh repo view tomxdev/desafio-arquitetura-era-ia-1 --json visibility,isFork,parent` | `docs/evidence/f09/repo-visibility.txt` | in_progress (fork público; falta a main final, após confirmação) |
 | ST-02 | `README.md` substituído pelo do aluno | F01, F08 | revisão | `README.md` | done (README final na F08) |
-| ST-03 | `compose.yaml` estendido sobe tudo com um comando | F05–F09 | AC-RDM-02 | `docs/evidence/f09/fresh-clone.log` | in_progress |
+| ST-03 | `compose.yaml` estendido sobe tudo com um comando | F05–F09 | AC-RDM-02 | `docs/evidence/f09/fresh-clone.log` | done |
 | ST-04 | `.env.example` estendido (basta copiar) | F05, F06 | AC-RDM-02 | `.env.example` | done |
 | ST-05 | `gateway/` com capacidades, fallback, chaves, orçamentos e limites | F05, F06 | revisão de `gateway/config.yaml` + seed | `gateway/` | done |
 | ST-06 | `tests/characterization/` | F02 | existe e passa | `tests/characterization/` | done |
