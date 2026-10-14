@@ -13,7 +13,7 @@ limite, 1ª requisição: status=200 | /admin/calls 0 -> 1 | {"id":"chatcmpl-b61
 limite, 2ª requisição: status=200 | /admin/calls 1 -> 2 | {"id":"chatcmpl-2c53731cdfc04eafba0f8c30","created":1791948346,"model":"helpdesk-classify","object":"chat.completion","choices":[{"finish_reason":"sto
   OK    limite, 2ª requisição → 200
   OK    limite, 2ª requisição chegou ao provider (+1 chamada)
-limite, 3ª requisição no mesmo minuto: status=429 | /admin/calls 2 -> 2 | {"error":{"message":"Rate limit exceeded for api_key: ca2cb264dc8baa348f888a350f002f8481c4d880a5361ad4ecef728cb8f28b13. Limit type: requests. Current 
+limite, 3ª requisição no mesmo minuto: status=429 | /admin/calls 2 -> 2 | {"error":{"message":"Rate limit exceeded for api_key: <hash-da-chave>. Limit type: requests. Current 
   OK    limite, 3ª requisição no mesmo minuto → 429
   OK    limite, 3ª requisição no mesmo minuto NÃO chegou ao provider (contador igual)
   OK    motivo: rate limit

@@ -30,7 +30,7 @@ $ python -c 'import sys,json;print(len(json.load(sys.stdin)))'
 3
 $ chat sk-demo-rpm-0001
 $ curl -s -w ' [%{http_code}]\n' localhost:4000/chat/completions -H 'Authorization: Bearer sk-demo-rpm-0001' -H 'Content-Type: application/json' -d '{"model": "helpdesk-classify", "messages": [{"role": "user", "content": "TASK: classify\nMeu pedido atrasou"}]}'
-{"error":{"message":"Rate limit exceeded for api_key: ca2cb264dc8baa348f888a350f002f8481c4d880a5361ad4ecef728cb8f28b13. Limit type: requests. Current limit: 2, Remaining: 0. Limit resets at: 2026-10-13 17:54:45 UTC","type":"throttling_error","param":null,"code":"429"}} [429]
+{"error":{"message":"Rate limit exceeded for api_key: <hash-da-chave>. Limit type: requests. Current limit: 2, Remaining: 0. Limit resets at: 2026-10-13 17:54:45 UTC","type":"throttling_error","param":null,"code":"429"}} [429]
 $ calls
 $ curl -s 'localhost:8090/admin/calls?last=100'
 $ python -c 'import sys,json;print(len(json.load(sys.stdin)))'

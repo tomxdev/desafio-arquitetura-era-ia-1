@@ -363,7 +363,7 @@ gh api -X POST repos/tomxdev/desafio-arquitetura-era-ia-1/rulesets --input .gith
 | F06 | Governança e resiliência | feature/06-governanca-resiliencia | develop | v2 publicada | budget, rpm, timeout, retry, fallback, troca de modelo | roteiros provados em `/admin/calls` | — | done |
 | F07 | Fluxos F1–F4 | feature/07-fluxos | develop | F06 | sync/SSE/async, testes da main | tempos pela borda; sem 504 | — | done |
 | F08 | ADRs, métrica final, README | feature/08-adrs-docs | develop | F07 | `docs/adr/*`, `results/main.*`, README | zona de dor; seções do README | — | done |
-| F09 | Validação e release final | release/final | main | F08 | matriz 100% `done` | clone limpo + todos os critérios | **main final** | in_progress |
+| F09 | Validação e release final | release/final | main | F08 | matriz 100% `done` | clone limpo + todos os critérios | **main final** | done |
 
 ### 4.1 Grafo de dependências e caminho crítico
 
@@ -1167,7 +1167,7 @@ git clean -ndx          # revisar antes de usar -fdx; nunca apagar .env sem quer
 | F06 | done | feature/06-governanca-resiliencia | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/11 | 691151c | docs/evidence/f06/ | governance/fallback/model_swap OK a partir de down -v; rotação de chave OK; ADRs 0004/0005/0006/0009 |
 | F07 | done | feature/07-fluxos | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/12 | dcdb758 | docs/evidence/f07/ | flows.sh OK (F1 1,09 s; F2 1º trecho 0,85 s; F3 aceite 0,07 s, mês 5000; failed 7,7 s); contract 8 passed |
 | F08 | done | feature/08-adrs-docs | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/13 | 5290ebf | docs/evidence/f08/ | main só com `schemas` na zona de dor (exceção no ADR 0008); 9 ADRs aceitos nos 3 níveis; README com 10 seções; roteiros reexecutados OK; corrigida colisão de `conftest` (R18) |
-| F09 | in_progress | release/final | correções: #14 (250ad8c), #16 (revisão do CodeRabbit no #15) | — | docs/evidence/f09/ | clone limpo OK após a correção do quiesce (R19); revisão do #15: 10 de 12 comentários aceitos (pins e limite de fila recusados com justificativa); matriz 92/93 (falta ST-01: main final); aguardando confirmação humana do merge na main |
+| F09 | done | release/final | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/15 (correções #14, #16; back-merge #17) | 5d58814 | docs/evidence/f09/ (revalidação da main em docs/evidence/f09/main-final/) | merge na main confirmado pelo usuário, sem tag nova; clone limpo da main: pytest 26 passed/1 skipped, 3 CSVs reproduzidos, 4 roteiros OK, áreas protegidas sem diff; revisão do #15: 10 de 12 comentários aceitos (pins e limite de fila recusados com justificativa); matriz 93/93 |
 
 ---
 
