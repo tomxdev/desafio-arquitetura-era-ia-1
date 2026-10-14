@@ -1,0 +1,20 @@
+# Governança (2026-10-14T04:14:18Z)
+## Orçamento: chave demo-budget (max_budget US$ 0,0001; uma classificação custa ~US$ 0,00013)
+gasto atual da chave: US$ 0.0001325
+orçamento, requisição após estourar: status=429 | /admin/calls 0 -> 0 | {"error":{"message":"Budget has been exceeded! Key=demo-budget (sk-...0001) Current cost: 0.0001325, Max budget: 0.0001","type":"budget_exceeded","par
+  OK    orçamento, requisição após estourar → 429
+  OK    orçamento, requisição após estourar NÃO chegou ao provider (contador igual)
+  OK    motivo: budget_exceeded
+## Limite de requisições: chave demo-rpm (2 por minuto)
+(aguardando a janela de 1 minuto zerar, para o roteiro ser repetível)
+limite, 1ª requisição: status=200 | /admin/calls 0 -> 1 | {"id":"chatcmpl-06bb9020a2ca4d17aa90ce81","created":1791951320,"model":"helpdesk-classify","object":"chat.completion","choices":[{"finish_reason":"sto
+  OK    limite, 1ª requisição → 200
+  OK    limite, 1ª requisição chegou ao provider (+1 chamada)
+limite, 2ª requisição: status=200 | /admin/calls 1 -> 2 | {"id":"chatcmpl-c62f3eaac8fe42db968bcea4","created":1791951322,"model":"helpdesk-classify","object":"chat.completion","choices":[{"finish_reason":"sto
+  OK    limite, 2ª requisição → 200
+  OK    limite, 2ª requisição chegou ao provider (+1 chamada)
+limite, 3ª requisição no mesmo minuto: status=429 | /admin/calls 2 -> 2 | {"error":{"message":"Rate limit exceeded for api_key: ca2cb264dc8baa348f888a350f002f8481c4d880a5361ad4ecef728cb8f28b13. Limit type: requests. Current 
+  OK    limite, 3ª requisição no mesmo minuto → 429
+  OK    limite, 3ª requisição no mesmo minuto NÃO chegou ao provider (contador igual)
+  OK    motivo: rate limit
+RESULTADO: OK

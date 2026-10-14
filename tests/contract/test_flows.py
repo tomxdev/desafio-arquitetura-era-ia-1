@@ -82,6 +82,17 @@ def test_f2_streams_first_chunk_within_1_5s(edge):
     assert len([e for e in events if e[1] == "message"]) > 10  # chega aos poucos, não em bloco
 
 
+def test_f2_without_any_destination_is_503_before_streaming(edge, fail):
+    # Falha antes do 1º trecho: o status ainda não saiu, então é 503 em JSON (não 200 + event: error).
+    fail(provider="openai", mode="error_500")
+    fail(provider="anthropic", mode="error_500")
+    response, elapsed = timed_post(edge, "/tickets/reply-suggestion", TICKET)
+    assert response.status_code == 503, response.text
+    assert response.headers["content-type"].startswith("application/json")
+    assert response.json()["detail"].startswith("Capacidade helpdesk-suggest indisponível")
+    assert elapsed <= 15, elapsed
+
+
 def test_f2_midstream_failure_arrives_as_error_event(edge, fail):
     fail(provider="anthropic", model="claude-fake-large", mode="midstream_error")
     response, events, _ = read_sse(edge, TICKET)
