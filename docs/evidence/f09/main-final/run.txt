@@ -1,0 +1,16 @@
+# Clone limpo da main (2026-10-14T09:35:19Z)
+commit: 5d58814 Merge pull request #15 from tomxdev/release/final
+CRLF no checkout: 0
+$ cp .env.example .env && docker compose up -d --build --wait
+$ curl localhost:8000/health → 200
+$ python -m pytest -q
+26 passed, 1 skipped in 84.13s (0:01:24)
+v1-coupled.csv reproduzido
+v2-decoupled.csv reproduzido
+main.csv reproduzido
+$ bash scripts/verify/governance.sh → exit=0 RESULTADO: OK (90 s)
+$ bash scripts/verify/fallback.sh → exit=0 RESULTADO: OK (90 s)
+$ bash scripts/verify/model_swap.sh → exit=0 RESULTADO: OK (51 s)
+$ bash scripts/verify/flows.sh → exit=0 RESULTADO: OK (422 s)
+protegidas vs base: 0 linhas de diff
+# fim (2026-10-14T09:48:53Z)
