@@ -15,7 +15,8 @@ gw() { # chave → "status" e corpo em "$BODY_FILE"
 attempt() { # rótulo chave status_esperado
   local before after status
   before=$(call_count); status=$(gw "$2"); sleep 0.5; after=$(call_count)
-  echo "$1: status=$status | /admin/calls $before -> $after | $(head -c 150 "$BODY_FILE")"
+  # A recusa do gateway traz o hash da chave; ele é mascarado para não ir parar nas evidências.
+  echo "$1: status=$status | /admin/calls $before -> $after | $(head -c 150 "$BODY_FILE" | sed -E 's/(api_key: ?)[0-9a-f]{64}/\1<hash-da-chave>/')"
   check "$1 → $3" "$([ "$status" = "$3" ] && echo 0 || echo 1)"
   if [ "$3" = 200 ]; then
     check "$1 chegou ao provider (+1 chamada)" "$([ "$after" -eq $((before + 1)) ] && echo 0 || echo 1)"

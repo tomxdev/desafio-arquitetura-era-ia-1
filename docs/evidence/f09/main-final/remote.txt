@@ -1,5 +1,5 @@
 # Remoto após o merge do PR #15 (2026-10-14T09:49:05Z)
-$ gh repo view tomxdev/desafio-arquitetura-era-ia-1 --json visibility,isFork,parent,defaultBranchRef
+$ gh repo view tomxdev/desafio-arquitetura-era-ia-1 --json visibility,isFork,parent,defaultBranchRef --jq '{visibility,isFork,parent:(.parent.owner.login+"/"+.parent.name),default:.defaultBranchRef.name}'
 {"default":"main","isFork":true,"parent":"devfullcycle/desafio-arquitetura-era-ia-1","visibility":"PUBLIC"}
 $ git ls-remote origin main develop
 9c089a6c22dedb6067b793c22f7202c854cccc83	refs/heads/develop

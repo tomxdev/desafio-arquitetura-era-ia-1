@@ -1,16 +1,18 @@
-# Clone limpo da main (2026-10-14T09:35:19Z)
+# Clone limpo da main (2026-10-14T11:25:25Z)
 commit: 5d58814 Merge pull request #15 from tomxdev/release/final
 CRLF no checkout: 0
 $ cp .env.example .env && docker compose up -d --build --wait
 $ curl localhost:8000/health → 200
 $ python -m pytest -q
-26 passed, 1 skipped in 84.13s (0:01:24)
+26 passed, 1 skipped in 82.15s (0:01:22)
 v1-coupled.csv reproduzido
 v2-decoupled.csv reproduzido
 main.csv reproduzido
-$ bash scripts/verify/governance.sh → exit=0 RESULTADO: OK (90 s)
+$ bash scripts/verify/governance.sh → exit=0 RESULTADO: OK (91 s)
 $ bash scripts/verify/fallback.sh → exit=0 RESULTADO: OK (90 s)
-$ bash scripts/verify/model_swap.sh → exit=0 RESULTADO: OK (51 s)
-$ bash scripts/verify/flows.sh → exit=0 RESULTADO: OK (422 s)
+$ bash scripts/verify/model_swap.sh → exit=0 RESULTADO: OK (52 s)
+$ bash scripts/verify/flows.sh → exit=0 RESULTADO: OK (424 s)
 protegidas vs base: 0 linhas de diff
-# fim (2026-10-14T09:48:53Z)
+# fim (2026-10-14T11:39:05Z)
+exit=0
+# Nota: o governance.sh desta main grava o hash da chave demo-rpm na recusa 429; ele foi mascarado como <hash-da-chave> em governance.txt depois da execução (o roteiro passa a mascarar sozinho a partir da revisão do PR #19).
