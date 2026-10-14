@@ -1,0 +1,1 @@
+{"isFork":true,"parent":{"id":"R_kgDOUrvq5A","name":"desafio-arquitetura-era-ia-1","owner":{"id":"O_kgDOBXfpjQ","login":"devfullcycle"}},"url":"https://github.com/tomxdev/desafio-arquitetura-era-ia-1","visibility":"PUBLIC"}

@@ -1,0 +1,167 @@
+# Clone limpo da release/final (2026-10-14T02:54:24Z)
+++ git clone -q --branch release/final https://github.com/tomxdev/desafio-arquitetura-era-ia-1.git fresh
+++ cd fresh
+++ git log --oneline -1
+5144183 docs(status): registra conclusão da F08
+++ git config --get core.autocrlf
+true
+++ git ls-files --eol
+++ grep -c w/crlf
+0
+++ cp .env.example .env
+++ docker compose up -d --build --wait
+ Image fresh-app Building 
+ Image fresh-provider-fake Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 967B done
+#1 DONE 0.0s
+
+#2 [provider-fake internal] load build definition from Dockerfile
+#2 transferring dockerfile: 475B done
+#2 DONE 0.0s
+
+#3 [app internal] load build definition from Dockerfile
+#3 transferring dockerfile: 264B 0.0s done
+#3 DONE 0.0s
+
+#4 [app internal] load metadata for docker.io/library/python:3.12-slim
+#4 DONE 1.0s
+
+#5 [app internal] load .dockerignore
+#5 transferring context: 58B done
+#5 DONE 0.0s
+
+#6 [provider-fake internal] load .dockerignore
+#6 transferring context: 64B done
+#6 DONE 0.0s
+
+#7 [app internal] load build context
+#7 transferring context: 18.13kB 0.0s done
+#7 DONE 0.0s
+
+#8 [app 1/5] FROM docker.io/library/python:3.12-slim@sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1
+#8 resolve docker.io/library/python:3.12-slim@sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1 0.0s done
+#8 DONE 0.1s
+
+#9 [app 3/5] COPY requirements.txt .
+#9 CACHED
+
+#10 [app 4/5] RUN pip install --no-cache-dir -r requirements.txt
+#10 CACHED
+
+#11 [app 2/5] WORKDIR /srv
+#11 CACHED
+
+#12 [app 5/5] COPY helpdesk ./helpdesk
+#12 CACHED
+
+#13 [app] exporting to image
+#13 ...
+
+#14 [provider-fake internal] load build context
+#14 transferring context: 27.85kB 0.0s done
+#14 DONE 0.0s
+
+#15 [provider-fake 5/6] COPY app ./app
+#15 CACHED
+
+#11 [provider-fake 2/5] WORKDIR /srv
+#11 CACHED
+
+#16 [provider-fake 3/6] COPY requirements.txt .
+#16 CACHED
+
+#17 [provider-fake 4/6] RUN pip install --no-cache-dir -r requirements.txt
+#17 CACHED
+
+#18 [provider-fake 6/6] RUN useradd --uid 10001 --no-create-home fake
+#18 CACHED
+
+#13 [app] exporting to image
+#13 exporting layers done
+#13 exporting manifest sha256:b1945e4ac047aa607c33ddefe91a81d8ba305184e341b7a7b6f26dc764bb670d 0.0s done
+#13 exporting config sha256:491aac80dea2ce8591809e1332d0048609647c5857f643ce463a4396178237fb 0.0s done
+#13 exporting attestation manifest sha256:adaec61841baea870a96a1c1b0f5ee3d9b0d547570e87cfcf0ede8380bebefd9 0.1s done
+#13 exporting manifest list sha256:ea832312cedcd6a5414a2b3f93244d7c4952f3f557a8991768466caaabcd18bc 0.0s done
+#13 naming to docker.io/library/fresh-app:latest
+#13 naming to docker.io/library/fresh-app:latest done
+#13 unpacking to docker.io/library/fresh-app:latest 0.0s done
+#13 DONE 0.3s
+
+#19 [provider-fake] exporting to image
+#19 exporting layers done
+#19 exporting manifest sha256:739ab1be15a90c496943f62af5b769fc131126ed60c068d8e634ab424ab88462 0.0s done
+#19 exporting config sha256:533b1d3e2c163db6b343bb7f29c635922e40b1c627793651c3d7adfbfadb589a 0.0s done
+#19 exporting attestation manifest sha256:3098b99fce5d083580cbf0ccfd2bdddb9488d7896e81c685c61754d37cea76bd 0.1s done
+#19 exporting manifest list sha256:7d1cc3e2c37a7a0f979813f632ec054ebe75714b6656f43ae5fd554ff4b12973 0.0s done
+#19 naming to docker.io/library/fresh-provider-fake:latest done
+#19 unpacking to docker.io/library/fresh-provider-fake:latest 0.0s done
+#19 DONE 0.3s
+
+#20 [app] resolving provenance for metadata file
+#20 DONE 0.0s
+
+#21 [provider-fake] resolving provenance for metadata file
+#21 DONE 0.0s
+ Image fresh-provider-fake Built 
+ Image fresh-app Built 
+ Volume fresh_gateway-db Creating 
+ Network fresh_default Creating 
+ Volume fresh_gateway-db Creating 
+ Network fresh_default Creating 
+ Volume fresh_gateway-db Created 
+ Volume fresh_gateway-db Created 
+ Network fresh_default Created 
+ Network fresh_default Created 
+ Container fresh-provider-fake-1 Creating 
+ Container fresh-gateway-db-1 Creating 
+ Container fresh-provider-fake-1 Created 
+ Container fresh-gateway-db-1 Created 
+ Container fresh-gateway-1 Creating 
+ Container fresh-gateway-1 Created 
+ Container fresh-app-1 Creating 
+ Container fresh-app-1 Created 
+ Container fresh-edge-1 Creating 
+ Container fresh-edge-1 Created 
+ Container fresh-provider-fake-1 Starting 
+ Container fresh-gateway-db-1 Starting 
+ Container fresh-provider-fake-1 Started 
+ Container fresh-gateway-db-1 Started 
+ Container fresh-gateway-db-1 Waiting 
+ Container fresh-provider-fake-1 Waiting 
+ Container fresh-gateway-db-1 Healthy 
+ Container fresh-provider-fake-1 Healthy 
+ Container fresh-gateway-1 Starting 
+ Container fresh-gateway-1 Started 
+ Container fresh-gateway-1 Waiting 
+ Container fresh-provider-fake-1 Waiting 
+ Container fresh-provider-fake-1 Healthy 
+ Container fresh-gateway-1 Healthy 
+ Container fresh-app-1 Starting 
+ Container fresh-app-1 Started 
+ Container fresh-app-1 Waiting 
+ Container fresh-app-1 Healthy 
+ Container fresh-edge-1 Starting 
+ Container fresh-edge-1 Started 
+ Container fresh-provider-fake-1 Waiting 
+ Container fresh-edge-1 Waiting 
+ Container fresh-app-1 Waiting 
+ Container fresh-gateway-1 Waiting 
+ Container fresh-gateway-db-1 Waiting 
+ Container fresh-provider-fake-1 Healthy 
+ Container fresh-gateway-db-1 Healthy 
+ Container fresh-app-1 Healthy 
+ Container fresh-edge-1 Healthy 
+ Container fresh-gateway-1 Healthy 
+
+real	0m33.285s
+user	0m0.015s
+sys	0m0.108s
+++ curl -s -o /dev/null -w '%{http_code}\n' localhost:8000/health
+200
+++ docker compose ps --format '{{.Service}} {{.Status}}'
+app Up 3 seconds (healthy)
+edge Up 1 second
+gateway Up 24 seconds (healthy)
+gateway-db Up 30 seconds (healthy)
+provider-fake Up 30 seconds (healthy)
