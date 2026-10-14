@@ -1,0 +1,9 @@
+# Tags remotas (2026-10-13T17:31:03Z)
+4664689873bcfd16238dff37609b3c01a54df0f9	refs/tags/v1-coupled
+fae6db47eb838e0a74022f324188ab9a8a39829a	refs/tags/v1-coupled^{}
+f41185bfd2d812e58e293df09df110fd5a1f23a8	refs/tags/v2-decoupled
+1ece5e00a158a1f5972188d79d89e59bbf7ac872	refs/tags/v2-decoupled^{}
+v2-decoupled^{commit} = 1ece5e00a158a1f5972188d79d89e59bbf7ac872
+$ git diff v1-coupled v2-decoupled -- tests/characterization/
+linhas de diff: 0
+OK v1-coupled é ancestral de v2-decoupled

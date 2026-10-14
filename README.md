@@ -2,11 +2,29 @@
 
 Entrega do desafio [Da integração frágil à arquitetura resiliente](https://github.com/devfullcycle/desafio-arquitetura-era-ia-1) (o enunciado completo continua no `README.md` do repositório base). O plano de execução e a rastreabilidade dos critérios estão em [`docs/implementation-master-plan.md`](docs/implementation-master-plan.md) e [`docs/acceptance-matrix.md`](docs/acceptance-matrix.md).
 
-> **Estado atual: v2 (`app/` refatorado atrás do AI Gateway, mesmo comportamento externo da v1).** As seções marcadas como *em construção* são preenchidas nas fases seguintes do plano. O diagnóstico abaixo descreve a v1 (`v1-coupled`).
+> **Versões:** tag [`v1-coupled`](../../tree/v1-coupled) (original, com a suíte de caracterização), tag [`v2-decoupled`](../../tree/v2-decoupled) (mesmo comportamento, atrás do AI Gateway) e branch `main` (F1/F4 síncronos, F2 em streaming SSE, F3 assíncrono, com governança e resiliência no gateway). O diagnóstico abaixo descreve a v1.
 
 ## Visão geral
 
-*Em construção (F08).* A aplicação (FastAPI, `app/helpdesk/`) não conhece provider, modelo físico nem chave de provider: cada feature pede uma **capacidade lógica** (`helpdesk-classify`, `helpdesk-suggest`, `helpdesk-topics`, `helpdesk-extract`) por uma porta (`ports.LLMGateway`), e o único componente que fala com o modelo, `adapters/gateway.py` (`GatewayClient`, SDK `openai`), chama o **AI Gateway** (serviço `gateway`, LiteLLM Proxy, [ADR 0001](docs/adr/0001-adotar-litellm-proxy-como-ai-gateway.md)) com uma chave virtual própria. O gateway mapeia cada capacidade para um modelo físico ([ADR 0002](docs/adr/0002-expor-capacidades-logicas-por-feature.md)) e guarda as chaves virtuais e o gasto no `gateway-db` ([ADR 0003](docs/adr/0003-persistir-chaves-e-gasto-no-postgres-do-gateway.md)). Resiliência (timeout, retry, fallback entre providers) e governança entram na próxima etapa; nesta versão, com um provider fora, a feature presa a ele ainda falha (como na v1).
+A aplicação (FastAPI, `app/helpdesk/`) não conhece provider, modelo físico nem chave de provider: cada feature pede uma **capacidade lógica** (`helpdesk-classify`, `helpdesk-suggest`, `helpdesk-topics`, `helpdesk-extract`) por uma porta (`ports.LLMGateway`), e o único componente que fala com o modelo, `adapters/gateway.py` (`GatewayClient`, SDK `openai`), chama o **AI Gateway** (serviço `gateway`, LiteLLM Proxy, [ADR 0001](docs/adr/0001-adotar-litellm-proxy-como-ai-gateway.md)) com uma chave virtual própria. O gateway mapeia cada capacidade para um modelo físico ([ADR 0002](docs/adr/0002-expor-capacidades-logicas-por-feature.md)) e guarda as chaves virtuais e o gasto no `gateway-db` ([ADR 0003](docs/adr/0003-persistir-chaves-e-gasto-no-postgres-do-gateway.md)). **Quando um provider cai**, cada capacidade passa para o modelo `large` equivalente do outro provider (mesma saída), depois de no máximo 2 tentativas no primário; sem nenhum `large`, F1/F2/F3 respondem com um modelo `mini` e a F4 (extração para uma automação sem revisão humana) falha explicitamente com `503` ([ADR 0006](docs/adr/0006-fallback-tecnico-e-politica-de-modelo-fraco-por-feature.md)). Timeout, retry e fallback moram no gateway; o app não faz retry ([ADR 0009](docs/adr/0009-concentrar-timeout-e-retry-no-gateway.md)). O gasto tem teto mensal e cada chave pode ter orçamento e limite de requisições, recusados antes do provider ([ADR 0004](docs/adr/0004-governar-acesso-com-chaves-orcamento-e-limite.md), [ADR 0005](docs/adr/0005-limitar-gasto-mensal-e-providers-aceitos.md)).
+
+```text
+cliente ──► edge (nginx, :8000, corta em 30 s) ──► app (FastAPI)
+                                                     │  features ──► ports.LLMGateway (porta)
+                                                     │  main ──► adapters/gateway.py (único cliente do modelo)
+                                                     ▼
+                                     gateway (LiteLLM, :4000) ──► provider-fake (openai/*, anthropic/*)
+                                                     │
+                                                     ▼
+                                           gateway-db (Postgres: chaves virtuais e gasto)
+```
+
+- **Serviços além dos do repositório base:** `gateway` ([ADR 0001](docs/adr/0001-adotar-litellm-proxy-como-ai-gateway.md)) e `gateway-db` ([ADR 0003](docs/adr/0003-persistir-chaves-e-gasto-no-postgres-do-gateway.md)). As chaves virtuais são semeadas pelo próprio entrypoint do gateway (sem serviço `gateway-init`). `provider-fake/`, `edge/` e `data/` não foram alterados.
+- **Máximo de tentativas por destino:** 2 para falhas transitórias (500/503/429) e 1 para timeout; o app não faz retry ([Tabela de capacidades](#tabela-de-capacidades)).
+- **Contratos que mudaram na `main`** (os campos de F1 e F4 e o conteúdo de F2 e F3 continuam os da v1; ver [Fluxos](#fluxos)):
+  - F2 responde `text/event-stream`: eventos `data: {"chunk": "..."}`, `event: end` com `{"ticket_id"}` e, se a geração falhar no meio, `event: error` com `{"ticket_id", "message"}`.
+  - F3 responde `202` com `{"job_id", "state"}`, `Location` e `Retry-After`; a URL de status devolve `{"state", "progress"?, "reason"?}` (`pending | running | failed`) ou `303` para o resultado, que tem os mesmos campos do relatório da v1.
+  - Sem destino disponível, F1–F4 respondem `503 {"detail": "Capacidade <nome> indisponível: <motivo>"}`, sem `504` da borda.
 
 ## Diagnóstico da v1
 
@@ -120,6 +138,22 @@ curl -s localhost:8000/health
 
 Serviços: `edge` (borda, `localhost:8000`), `app` (helpdesk), `gateway` (LiteLLM, `localhost:4000`), `gateway-db` (Postgres do gateway) e `provider-fake` (`localhost:8090`). A chave virtual do app é criada na subida, sem passo manual; o `--wait` só retorna quando ela já existe.
 
+Arquivos acrescentados ao repositório base:
+
+| Caminho | Conteúdo |
+|---|---|
+| `gateway/config.yaml` | capacidades, modelos físicos, preços, timeouts, retries e fallbacks do gateway |
+| `gateway/entrypoint.sh`, `gateway/seed_keys.py` | sobem o LiteLLM e criam as chaves virtuais (app e demonstração) de forma idempotente |
+| `app/helpdesk/ports.py`, `app/helpdesk/adapters/gateway.py`, `app/helpdesk/report_jobs.py` | porta do modelo, único cliente do gateway e execução assíncrona da F3 |
+| `tests/characterization/` | suíte de caracterização (goldens da v1) |
+| `tests/contract/` | contratos da `main` (tempos pela borda e cenários de falha) |
+| `metrics/` | script da métrica, testes e `results/` das três versões |
+| `scripts/diagnostics/`, `scripts/verify/` | roteiros do diagnóstico da v1 e das verificações da `main` |
+| `docs/adr/`, `docs/evidence/` | decisões e saídas brutas citadas neste README |
+| `.github/workflows/ci.yml` | CI: áreas protegidas, nomes físicos fora de `app/`, métrica, caracterização, roteiros e contratos |
+
+Todos os testes de uma vez (compose no ar): `python -m pytest -q`.
+
 Diagnóstico da v1 (exige o compose no ar; Git Bash ou bash):
 
 ```bash
@@ -139,7 +173,24 @@ pip install -r tests/requirements.txt
 python -m pytest tests/characterization -q
 ```
 
-A suíte (`tests/characterization/`) tem 17 casos: corpo inteiro, status e `Content-Type` das 4 features, mais pelo menos um erro de entrada por feature. Cada teste começa com `POST localhost:8090/admin/reset`. As URLs podem ser trocadas com `HELPDESK_BASE_URL` e `PROVIDER_ADMIN_URL`.
+A suíte (`tests/characterization/`) tem 17 casos: corpo inteiro, status e `Content-Type` das 4 features, mais pelo menos um erro de entrada por feature. Cada teste começa com `POST localhost:8090/admin/reset`. As URLs podem ser trocadas com `HELPDESK_BASE_URL` e `PROVIDER_ADMIN_URL`. Nas tags `v1-coupled` e `v2-decoupled` ela é idêntica; na `main`, F2 e F3 são consumidos no novo contrato (SSE e polling), comparados com os mesmos goldens da v1.
+
+Testes dos contratos da main (tempos pela borda e cenários de falha; ~40 s; o do mês inteiro só com `RUN_SLOW=1`, ~6 min):
+
+```bash
+python -m pytest tests/contract -q
+```
+
+Roteiros de verificação (conferem sozinhos o `/admin/calls` e saem com erro se algo divergir; cada um começa reiniciando o `app` e esperando o `/admin/calls` ficar 15 s parado, para descartar tarefas de relatório deixadas por execuções anteriores, como o teste de contrato da F3):
+
+```bash
+bash scripts/verify/flows.sh        # fluxos F1–F4 pela borda, inclusive o mês inteiro (~7 min)
+bash scripts/verify/fallback.sh     # fallback técnico, tabela de fallback e timeout
+bash scripts/verify/model_swap.sh   # troca de modelo só pelo gateway
+bash scripts/verify/governance.sh   # orçamento e limite de requisições
+```
+
+> Clientes Python no Windows: use `127.0.0.1` (e não `localhost`) para falar com o gateway na porta 4000. Ela só escuta em IPv4 (`127.0.0.1:4000`), e o `httpx` tenta primeiro `::1`, o que acrescenta ~2 s por conexão. O `curl` e o caminho app → gateway não são afetados.
 
 Métrica de acoplamento (Ca, Ce, I, A, D pela régua do requisito 3; grava `metrics/results/<rótulo>.csv` e `.png`):
 
@@ -154,7 +205,7 @@ python -m pytest metrics/tests -q                             # testes do script
 
 ## Métrica
 
-Script: [`metrics/coupling.py`](metrics/coupling.py); régua e interpretações no [ADR 0008](docs/adr/0008-medir-acoplamento-pela-regua-fixa.md). Plano, piloto, revisão e handoff da refatoração em [`docs/refactoring-plan.md`](docs/refactoring-plan.md). *Leitura da main: em construção (F08).*
+Script: [`metrics/coupling.py`](metrics/coupling.py); régua e interpretações no [ADR 0008](docs/adr/0008-medir-acoplamento-pela-regua-fixa.md). Plano, piloto, revisão e handoff da refatoração em [`docs/refactoring-plan.md`](docs/refactoring-plan.md). Os três gráficos usam o mesmo script e a mesma régua.
 
 ### v1-coupled
 
@@ -178,35 +229,161 @@ Script: [`metrics/coupling.py`](metrics/coupling.py); régua e interpretações 
 - **`adapters.gateway`** (o único cliente do modelo) e **`tickets`**: concretos, importados só por `main`, implementam a porta (I 0,50, D 0,50), fora da zona de dor.
 - **`schemas`** continua em D 1,00: são os tipos de valor do contrato HTTP, que a suíte de caracterização congela; é a exceção "estável por natureza" proposta no ADR 0008.
 
+### main
+
+![A × I da main](metrics/results/main.png)
+
+[`metrics/results/main.csv`](metrics/results/main.csv) ([conferência da zona de dor](docs/evidence/f08/pain-zone-check.txt)):
+
+- **Zona de dor: só `schemas`**, a exceção estável por natureza aceita no [ADR 0008](docs/adr/0008-medir-acoplamento-pela-regua-fixa.md): tipos de valor do contrato HTTP, sem dependências internas, que só mudam quando o contrato muda (e o contrato é fixado pela suíte de caracterização).
+- **`ports`** (Ca 8, A 0,67, D 0,33): continua a abstração estável; passou a guardar também `CapabilityUnavailable`, o erro de contrato entre o adaptador, as features e `main` (por isso A caiu de 1,00 para 0,67, ainda longe da zona).
+- **`report_jobs`** (I 0,75, D 0,25): novo componente concreto da execução assíncrona da F3 ([ADR 0007](docs/adr/0007-decidir-o-modo-de-execucao-de-cada-feature.md)); depende de `report`, `ports` e `schemas`.
+- **`adapters.gateway`**, **`tickets`** e as **features** não mudaram de posição em relação à v2; `main` continua o único que importa o adaptador (`grep -rlnE "openai|httpx" app/helpdesk` → só `adapters/gateway.py`).
+
+| | v1-coupled | v2-decoupled | main |
+|---|---|---|---|
+| Componentes na zona de dor | `config`, `llm`, `schemas` | `schemas` | `schemas` |
+| Componentes com abstração (A > 0) | nenhum | `ports` | `ports` |
+| Quem importa o SDK do modelo | `llm` (2 SDKs) | `adapters.gateway` | `adapters.gateway` |
+
 ## Tabela de capacidades
 
-*Preliminar (v2): fallback técnico, política com modelo fraco e tentativas por destino entram na F06.*
+Configuração: [`gateway/config.yaml`](gateway/config.yaml). Decisões: [ADR 0002](docs/adr/0002-expor-capacidades-logicas-por-feature.md) (capacidades), [ADR 0006](docs/adr/0006-fallback-tecnico-e-politica-de-modelo-fraco-por-feature.md) (fallback), [ADR 0009](docs/adr/0009-concentrar-timeout-e-retry-no-gateway.md) (timeout e retry).
 
-| Capacidade lógica | Feature | Modelo primário | Fallback técnico | Modelo fraco | Máx. tentativas por destino |
-|---|---|---|---|---|---|
-| `helpdesk-classify` | F1 | `openai/gpt-fake-large` | — (F06) | — (F06) | 1 |
-| `helpdesk-suggest` | F2 | `anthropic/claude-fake-large` | — (F06) | — (F06) | 1 |
-| `helpdesk-topics` | F3 | `anthropic/claude-fake-large` | — (F06) | — (F06) | 1 por lote |
-| `helpdesk-extract` | F4 | `openai/gpt-fake-large` | — (F06) | — (F06) | 1 |
+| Capacidade lógica | Feature | Modelo primário | Fallback técnico | Política com modelo fraco | Timeout por tentativa | Máx. tentativas por destino |
+|---|---|---|---|---|---|---|
+| `helpdesk-classify` | F1 | `openai/gpt-fake-large` | `anthropic/claude-fake-large` | **sim**: `openai/gpt-fake-mini` | 4 s | primário 2 · fallback 2 · fraco 2 |
+| `helpdesk-suggest` | F2 | `anthropic/claude-fake-large` | `openai/gpt-fake-large` | **sim**: `anthropic/claude-fake-mini` | 30 s | primário 2 · fallback 2 · fraco 2 |
+| `helpdesk-topics` | F3 | `anthropic/claude-fake-large` | `openai/gpt-fake-large` | **sim**: `anthropic/claude-fake-mini` | 30 s | primário 2 · fallback 2 · fraco 2 (por lote) |
+| `helpdesk-extract` | F4 | `openai/gpt-fake-large` | `anthropic/claude-fake-large` | **não** (falha explícita) | 4 s | primário 2 · fallback 2 |
 
-Componente que chama o gateway: [`app/helpdesk/adapters/gateway.py`](app/helpdesk/adapters/gateway.py) (`GatewayClient`, `max_retries=0`, timeout de 60 s por chamada), montado só em [`app/helpdesk/main.py`](app/helpdesk/main.py).
+"2" = 1 tentativa + 1 retry, só para falhas transitórias (500/503/429), com espera crescente entre elas. Timeout não é repetido: vale **1** tentativa por destino. O app não faz retry (`max_retries=0`).
+
+Componente que chama o gateway: [`app/helpdesk/adapters/gateway.py`](app/helpdesk/adapters/gateway.py) (`GatewayClient`, sem retry, timeout por capacidade: 12 s em F1/F2/F4 e 50 s por lote na F3), montado só em [`app/helpdesk/main.py`](app/helpdesk/main.py).
 
 ## Tabela de fallback
 
-*Em construção (F06).*
+O que cada feature faz quando **não há nenhum modelo `large` disponível** (os dois em `error_500`), pela borda ([evidência](docs/evidence/f06/fallback.txt)):
+
+| Feature | Comportamento | Resposta | Status | Por quê |
+|---|---|---|---|---|
+| F1 Classificar | responde com `gpt-fake-mini` | `{"ticket_id", "category", "priority"}` (na amostra, igual ao `large`) | 200 | cliente esperando; mini idêntico em 40/40 |
+| F2 Sugerir | responde com `claude-fake-mini` | stream SSE normal (`data: {"chunk"}` … `event: end`), texto mais curto (~44%) | 200 | atendente revisa e edita; um rascunho menor é melhor que nada |
+| F3 Relatório | cada lote responde com `claude-fake-mini` | `202` no pedido; o status chega a `303` e o resultado traz o relatório completo | 202 → 303 → 200 | painel interno; mini idêntico no lote amostrado |
+| F4 Extrair | **falha explícita**, sem modelo fraco | `{"detail": "Capacidade helpdesk-extract indisponível: nenhum modelo disponível (gateway respondeu 500)"}` | **503** | automação sem revisão humana; o mini trocou o pedido pela nota fiscal em 4/40, em formato válido |
+
+Se nenhum destino responder (os dois providers inteiros fora), F1, F2 e F4 respondem `503` com o mesmo formato de `detail` (F1: 7,3 s, [evidência](docs/evidence/f06/all-down.txt); F2 antes do 1º trecho, coberto em `tests/contract`), e a tarefa da F3 termina em `failed` com o mesmo motivo. O mesmo `503` vale quando a chave do app estoura o orçamento ou o limite de requisições.
 
 ## Fluxos
 
-*Em construção (F07).*
+Decisão e justificativa por feature no [ADR 0007](docs/adr/0007-decidir-o-modo-de-execucao-de-cada-feature.md); medições pela borda em [`docs/evidence/f07/flows.txt`](docs/evidence/f07/flows.txt). Os corpos com acento vêm de arquivo (ver a nota sobre Windows no diagnóstico).
+
+| Feature | Modo | Por quê (árvore de decisão) | Medido pela borda |
+|---|---|---|---|
+| F1 Classificar | **síncrono** (timeout 12 s; sem destino → `503`) | cliente esperando; saída curta cabe em 3 s | 1,09–1,12 s |
+| F2 Sugerir | **streaming SSE** | atendente esperando; texto longo (~16 s) não cabe, mas é consumível aos poucos | 1º trecho em 0,85 s; fim em 16,2 s |
+| F3 Relatório | **Asynchronous Request-Reply** | ninguém esperando; o mês (~5,5 min) não cabe em 30 s; só vale agregado | pedido aceito em 0,07 s; mês completo com 5.000 tickets; sem providers, `failed` em 7,7 s |
+| F4 Extrair | **síncrono estrito** (timeout 12 s; sem `large` → `503`) | automação esperando; saída curta; só serve completa e validada | ~1,1 s |
+
+**F1 (síncrono)**: o resultado completo no corpo.
+
+```bash
+curl -s -X POST localhost:8000/tickets/classification -H "Content-Type: application/json" \
+  --data-binary @scripts/diagnostics/payloads/ticket-tk-00042.json
+# 200 {"ticket_id":"TK-00042","category":"delivery","priority":"high"}
+```
+
+**F2 (streaming SSE)**: `Content-Type: text/event-stream`; consumir com `curl -N` ou, no navegador, com `fetch()` lendo `response.body` (o `EventSource` nativo só faz `GET` e não serve para esta rota, que é `POST` com corpo JSON).
+
+```bash
+curl -N -X POST localhost:8000/tickets/reply-suggestion -H "Content-Type: application/json" \
+  --data-binary @scripts/diagnostics/payloads/ticket-tk-00042.json
+# data: {"chunk": "Olá!"}
+# data: {"chunk": " Sin"}
+# ...
+# event: end
+# data: {"ticket_id": "TK-00042"}
+```
+
+Se o provider falhar no meio (`midstream_error`), o stream termina com `event: error` + `data: {"ticket_id": "TK-00042", "message": "A geração foi interrompida"}`. Se nenhum destino responder antes do primeiro trecho, a resposta é `503` em JSON (como F1/F4).
+
+**F3 (Asynchronous Request-Reply)**: o pedido devolve `202` com `Location` e `Retry-After`; consulte a URL de status até o `303` e siga para o resultado.
+
+```bash
+curl -si -X POST localhost:8000/reports/topics -H "Content-Type: application/json" \
+  -d '{"start": "2026-08-01", "end": "2026-08-31"}'
+# HTTP/1.1 202 Accepted
+# location: /reports/topics/status/1dfe15cd1736
+# retry-after: 5
+# {"job_id":"1dfe15cd1736","state":"pending"}
+
+curl -si localhost:8000/reports/topics/status/1dfe15cd1736
+# 200 {"state":"running","progress":"1800/5000"}      (ou {"state":"pending"}; ou {"state":"failed","reason":"..."})
+# 303 See Other + location: /reports/topics/1dfe15cd1736   (quando termina)
+
+curl -sL localhost:8000/reports/topics/status/1dfe15cd1736   # -L segue o 303 até o relatório
+# 200 {"start":"2026-08-01","end":"2026-08-31","total_tickets":5000,"topics":[...]}
+```
+
+Campos além dos Contratos sugeridos: `job_id` no corpo do `202`, e `progress` (tickets processados/total) e `reason` (motivo da falha) no status. Uma tarefa que não consegue terminar chega a `failed` com o motivo (cada lote tem timeout de 50 s no app). As tarefas ficam em memória no app: um reinício do app as descarta (fora de escopo).
+
+**F4 (síncrono estrito)**: como a F1; sem nenhum `large`, `503 {"detail": "Capacidade helpdesk-extract indisponível: ..."}`.
+
+```bash
+curl -s -X POST localhost:8000/tickets/extraction -H "Content-Type: application/json" \
+  --data-binary @scripts/diagnostics/payloads/ticket-tk-00042.json
+# 200 {"ticket_id":"TK-00042","order_number":"#481516","product":null}
+```
 
 ## Troca de modelo
 
-*Em construção (F06).* Na v1, ver a dor 4.
+Trocar o modelo físico de uma capacidade é configuração do gateway: o `app` não é reconstruído nem reiniciado.
+
+1. **Arquivo:** [`gateway/config.yaml`](gateway/config.yaml).
+2. **O que alterar:** o `model:` do bloco da capacidade. Ex.: para a classificação usar o modelo barato,
+   ```yaml
+     - model_name: helpdesk-classify
+       litellm_params: {model: openai/gpt-fake-mini, ...}     # era openai/gpt-fake-large
+   ```
+   (para trocar de provider, ajuste também `api_base` e `api_key`, copiando de outro bloco do mesmo provider).
+3. **Comando:** `docker compose restart gateway` (e `docker compose up -d --wait gateway` para esperar ficar saudável).
+
+A próxima chamada aparece em `curl -s "localhost:8090/admin/calls?last=1"` com o novo modelo. Roteiro automático, que troca, confere que o `StartedAt` do `app` não mudou e desfaz: `bash scripts/verify/model_swap.sh` ([evidência](docs/evidence/f06/model-swap.txt)).
 
 ## Roteiro de governança
 
-*Em construção (F06).*
+Chaves de demonstração criadas na subida ([ADR 0004](docs/adr/0004-governar-acesso-com-chaves-orcamento-e-limite.md)): `sk-demo-budget-0001` (orçamento de US$ 0,0001) e `sk-demo-rpm-0001` (2 requisições/minuto), as duas só para `helpdesk-classify`. A chave do app (`helpdesk-app`) tem teto de US$ 100 a cada 30 dias e 600 requisições/minuto ([ADR 0005](docs/adr/0005-limitar-gasto-mensal-e-providers-aceitos.md)).
+
+```bash
+curl -s -X POST localhost:8090/admin/reset
+calls() { curl -s "localhost:8090/admin/calls?last=100" | python -c "import sys,json;print(len(json.load(sys.stdin)))"; }
+chat() { curl -s -w ' [%{http_code}]\n' localhost:4000/chat/completions -H "Authorization: Bearer $1" \
+  -H 'Content-Type: application/json' \
+  -d '{"model": "helpdesk-classify", "messages": [{"role": "user", "content": "TASK: classify\nMeu pedido atrasou"}]}'; }
+
+# Orçamento: a 1ª passa e estoura o orçamento; a 2ª é recusada (429 budget_exceeded) sem chegar ao provider
+calls; chat sk-demo-budget-0001; calls      # 0 → 1
+chat sk-demo-budget-0001; calls             # [429] "Budget has been exceeded!" → continua 1
+
+# Limite: 2 por minuto; a 3ª no mesmo minuto é recusada (429 rate limit) sem chegar ao provider
+chat sk-demo-rpm-0001; chat sk-demo-rpm-0001; calls   # → 3
+chat sk-demo-rpm-0001; calls                          # [429] "Rate limit exceeded" → continua 3
+```
+
+O orçamento da `demo-budget` não se renova: para repetir a parte do orçamento, recrie as chaves (`docker compose down -v && docker compose up -d --build --wait`). Roteiro automático com as conferências: `bash scripts/verify/governance.sh` ([evidência](docs/evidence/f06/governance.txt)).
 
 ## Mapa de decisões
 
-*Em construção (F08).*
+ADRs em [`docs/adr/`](docs/adr/) (modelo: [`0000-template.md`](docs/adr/0000-template.md)). Cada um traz contexto com fatos medidos, opções, decisão, consequências e o comando que demonstra a decisão; as evidências foram reexecutadas na F08 ([`docs/evidence/f08/`](docs/evidence/f08/)).
+
+| ADR | Decisão | Nível | Resumo |
+|---|---|---|---|
+| [0001](docs/adr/0001-adotar-litellm-proxy-como-ai-gateway.md) | Adotar LiteLLM Proxy como AI Gateway | solução | gateway self-hosted e gratuito, compatível com a API OpenAI, entre o app e os providers |
+| [0002](docs/adr/0002-expor-capacidades-logicas-por-feature.md) | Expor capacidades lógicas por feature | software | o app pede `helpdesk-<feature>`; o modelo físico só existe em `gateway/config.yaml` |
+| [0003](docs/adr/0003-persistir-chaves-e-gasto-no-postgres-do-gateway.md) | Persistir chaves e gasto no Postgres do gateway | solução | serviço extra `gateway-db`, exigido pelo LiteLLM para chaves virtuais, orçamento e gasto |
+| [0004](docs/adr/0004-governar-acesso-com-chaves-orcamento-e-limite.md) | Governar acesso com chaves, orçamento e limite | solução | chave virtual por consumidor; orçamento e RPM recusados com `429` antes do provider |
+| [0005](docs/adr/0005-limitar-gasto-mensal-e-providers-aceitos.md) | Limitar o gasto mensal e os providers aceitos | **corporativa** | teto de US$ 100 a cada 30 dias para o helpdesk; só os providers `openai` e `anthropic` |
+| [0006](docs/adr/0006-fallback-tecnico-e-politica-de-modelo-fraco-por-feature.md) | Fallback técnico e política de modelo fraco | solução | `large` do outro provider para todas; `mini` só em F1/F2/F3; F4 falha com `503` |
+| [0007](docs/adr/0007-decidir-o-modo-de-execucao-de-cada-feature.md) | Modo de execução por feature | solução | F1 síncrono, F2 SSE, F3 Asynchronous Request-Reply, F4 síncrono estrito |
+| [0008](docs/adr/0008-medir-acoplamento-pela-regua-fixa.md) | Medir acoplamento pela régua fixa | software | script próprio sobre `ast`; `schemas` é a única exceção estável por natureza |
+| [0009](docs/adr/0009-concentrar-timeout-e-retry-no-gateway.md) | Concentrar timeout e retry no gateway | software | timeout por destino (4 s / 30 s), 1 retry só em falha transitória; app com `max_retries=0` |

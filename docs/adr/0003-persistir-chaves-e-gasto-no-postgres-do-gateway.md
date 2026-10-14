@@ -27,7 +27,7 @@ As chaves são criadas na subida por `gateway/seed_keys.py`, executado pelo `gat
 - Os valores de chaves e senha são de laboratório, versionados no `.env.example` por exigência de reprodutibilidade (`cp .env.example .env` basta); num ambiente real viriam de um cofre.
 - `docker compose down -v` apaga o volume (gasto e chaves); a próxima subida recria as chaves.
 - O gateway é publicado só em `127.0.0.1:4000` (inspeção e roteiro de governança no host), para não expor a API de administração na rede com a master key de laboratório.
-- Limitação conhecida: trocar o valor de `HELPDESK_GATEWAY_KEY` sem `down -v` cria a chave nova, mas não revoga a antiga, que continua no banco. Rotação de chave não é requisito do desafio; o seeder passa a tratar isso quando gerenciar várias chaves (F06).
+- Rotação: trocar o valor de uma chave no `.env` e recriar o gateway revoga a chave antiga com o mesmo alias antes de criar a nova (F06, [evidência](../evidence/f06/key-rotation.txt)).
 
 ## Evidência
 
@@ -36,3 +36,5 @@ docker compose ps gateway-db gateway                        # healthy
 docker compose logs gateway | grep "chave helpdesk-app"     # criada / já existe
 curl -s localhost:4000/key/info?key=sk-helpdesk-app-0001 -H "Authorization: Bearer sk-litellm-master-0001"
 ```
+
+Reexecutado na F08 ([saída](../evidence/f08/adr-evidence.txt)): `chave helpdesk-app: já existe` depois de reiniciar o gateway (as chaves sobrevivem no `gateway-db`) e `/key/info` com o gasto acumulado.

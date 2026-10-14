@@ -1,0 +1,16 @@
+$ docker compose config --services
+provider-fake
+gateway-db
+gateway
+app
+edge
+
+Serviços do repositório base: provider-fake, edge, app. Gateway exigido pelo requisito 5.
+gateway    → docs/adr/0001-adotar-litellm-proxy-como-ai-gateway.md
+gateway-db → docs/adr/0003-persistir-chaves-e-gasto-no-postgres-do-gateway.md
+
+$ grep -n "^- Nível\|gateway-db" docs/adr/0003-*.md | head -4
+1:# 0003. Persistir chaves virtuais e gasto num Postgres dedicado ao gateway (`gateway-db`)
+5:- Nível: solução
+19:Opção 1: serviço `gateway-db` (`postgres:16-alpine`, volume nomeado `gateway-db`), visível só dentro da rede do compose, acessado apenas pelo `gateway`. A opção 2 daria à aplicação a cred
+25:- O gateway passa a depender do banco: sem `gateway-db` saudável ele não sobe (o compose ordena por `service_healthy`).

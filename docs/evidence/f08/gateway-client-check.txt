@@ -1,0 +1,10 @@
+$ grep -rlnE "^(import|from) (openai|httpx|anthropic|requests)" app/helpdesk
+app/helpdesk/adapters/gateway.py
+$ grep -rnE "adapters(\.gateway| import gateway)" app/helpdesk | grep -v main.py
+(vazio)
+$ grep "^adapters.gateway" metrics/results/main.csv   # Ca 1 = main
+adapters.gateway,1,1,0.50,0.00,0.50
+$ grep -n "adapters/gateway.py" README.md | head -3
+9:A aplicação (FastAPI, `app/helpdesk/`) não conhece provider, modelo físico nem chave de provider: cada feature pede uma **capacidade lógica** (`helpdesk-
+14:                                                     │  main ──► adapters/gateway.py (único cliente do modelo)
+225:- **`adapters.gateway`**, **`tickets`** e as **features** não mudaram de posição em relação à v2; `main` continua o único que importa o adaptador (`g

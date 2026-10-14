@@ -359,11 +359,11 @@ gh api -X POST repos/tomxdev/desafio-arquitetura-era-ia-1/rulesets --input .gith
 | F02 | Caracterização + v1 | feature/02-caracterizacao → release/v1-coupled | develop → main | F01 | `tests/characterization/`, tag | suíte verde na v1; `app/` idêntico | **v1-coupled** | done |
 | F03 | Métrica | feature/03-metrica | develop | v1 publicada | `metrics/` + `results/v1-coupled.{csv,png}` | v1.csv = oráculo 1.1; unit tests | — | done |
 | F04 | Plano + piloto | feature/04-plano-piloto | develop | F03 | `docs/refactoring-plan.md`, piloto | suíte verde; métrica antes/depois | — | done |
-| F05 | Gateway + v2 | feature/05-gateway-v2 → release/v2-decoupled | develop → main | F04 | `gateway/`, compose, app refatorado, `results/v2-decoupled.*` | suíte **inalterada** verde; greps; env do app | **v2-decoupled** | pending |
-| F06 | Governança e resiliência | feature/06-governanca-resiliencia | develop | v2 publicada | budget, rpm, timeout, retry, fallback, troca de modelo | roteiros provados em `/admin/calls` | — | pending |
-| F07 | Fluxos F1–F4 | feature/07-fluxos | develop | F06 | sync/SSE/async, testes da main | tempos pela borda; sem 504 | — | pending |
-| F08 | ADRs, métrica final, README | feature/08-adrs-docs | develop | F07 | `docs/adr/*`, `results/main.*`, README | zona de dor; seções do README | — | pending |
-| F09 | Validação e release final | release/final | main | F08 | matriz 100% `done` | clone limpo + todos os critérios | **main final** | pending |
+| F05 | Gateway + v2 | feature/05-gateway-v2 → release/v2-decoupled | develop → main | F04 | `gateway/`, compose, app refatorado, `results/v2-decoupled.*` | suíte **inalterada** verde; greps; env do app | **v2-decoupled** | done |
+| F06 | Governança e resiliência | feature/06-governanca-resiliencia | develop | v2 publicada | budget, rpm, timeout, retry, fallback, troca de modelo | roteiros provados em `/admin/calls` | — | done |
+| F07 | Fluxos F1–F4 | feature/07-fluxos | develop | F06 | sync/SSE/async, testes da main | tempos pela borda; sem 504 | — | done |
+| F08 | ADRs, métrica final, README | feature/08-adrs-docs | develop | F07 | `docs/adr/*`, `results/main.*`, README | zona de dor; seções do README | — | done |
+| F09 | Validação e release final | release/final | main | F08 | matriz 100% `done` | clone limpo + todos os critérios | **main final** | in_progress |
 
 ### 4.1 Grafo de dependências e caminho crítico
 
@@ -1163,11 +1163,11 @@ git clean -ndx          # revisar antes de usar -fdx; nunca apagar .env sem quer
 | F03 | done | feature/03-metrica | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/6 | 5c432ea | metrics/results/v1-coupled.*, docs/evidence/f03/ | v1 = oráculo; 12 testes; inclui correções do review do PR #4 |
 | F04 | done | feature/04-plano-piloto | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/7 | 36e1c17 | docs/evidence/f04/ | piloto em classification: 17/17; revisão 1 registrada |
 | F05 | done | feature/05-gateway-v2 | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/8 | 05e9400 | docs/evidence/f05/ | gateway + refatoração via agente (5 alvos, 0 rejeições); juízes independentes 4/4; corrigido bug do `! grep` no CI |
-| F05-REL | in_progress | release/v2-decoupled | (PR para main aberto, aguardando confirmação) | — | tag `v2-decoupled`: — | confirmação humana |
-| F06 | pending | feature/06-governanca-resiliencia | — | — | docs/evidence/f06/ | |
-| F07 | pending | feature/07-fluxos | — | — | docs/evidence/f07/ | |
-| F08 | pending | feature/08-adrs-docs | — | — | docs/evidence/f08/ | |
-| F09 | pending | release/final | — | — | docs/evidence/f09/ | confirmação humana |
+| F05-REL | done | release/v2-decoupled | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/9 (back-merge #10) | 1ece5e0 | tag `v2-decoupled` → 1ece5e0 (anotada f41185b) | confirmado pelo usuário; review do CodeRabbit: gateway só em 127.0.0.1 |
+| F06 | done | feature/06-governanca-resiliencia | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/11 | 691151c | docs/evidence/f06/ | governance/fallback/model_swap OK a partir de down -v; rotação de chave OK; ADRs 0004/0005/0006/0009 |
+| F07 | done | feature/07-fluxos | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/12 | dcdb758 | docs/evidence/f07/ | flows.sh OK (F1 1,09 s; F2 1º trecho 0,85 s; F3 aceite 0,07 s, mês 5000; failed 7,7 s); contract 8 passed |
+| F08 | done | feature/08-adrs-docs | https://github.com/tomxdev/desafio-arquitetura-era-ia-1/pull/13 | 5290ebf | docs/evidence/f08/ | main só com `schemas` na zona de dor (exceção no ADR 0008); 9 ADRs aceitos nos 3 níveis; README com 10 seções; roteiros reexecutados OK; corrigida colisão de `conftest` (R18) |
+| F09 | in_progress | release/final | correções: #14 (250ad8c), #16 (revisão do CodeRabbit no #15) | — | docs/evidence/f09/ | clone limpo OK após a correção do quiesce (R19); revisão do #15: 10 de 12 comentários aceitos (pins e limite de fila recusados com justificativa); matriz 92/93 (falta ST-01: main final); aguardando confirmação humana do merge na main |
 
 ---
 
@@ -1179,10 +1179,10 @@ git clean -ndx          # revisar antes de usar -fdx; nunca apagar .env sem quer
 |---|---|---|---|---|
 | D1 | Semear a virtual key: entrypoint do gateway (a) vs. serviço `gateway-init` (b) | F05 | testar (a) com `up --wait`; se inviável, (b) + ADR | **resolvida: (a)**. `gateway/entrypoint.sh` + `seed_keys.py`; healthcheck só passa com a chave criada; `up --wait` do zero em ~33 s (ADR 0003) |
 | D2 | `/key/generate` aceita `key` fixo na versão pinada? | F05 | chamada de teste | **resolvida: sim** (`v1.102.1` cria `sk-helpdesk-app-0001` como pedido) |
-| D3 | Campos de preço por token no `model_list` da versão pinada | F06 | `spend > 0` em `/key/info` | pending |
-| D4 | Mini como último recurso em F1, F2, F3 (F4: não, por hipótese) | F06 | `docs/evidence/f01/models-compare/summary.md`: classify e topics idênticos ao large na amostra; extract erra 9/40 (4 com nota fiscal como pedido, formato válido); suggest ~44% do tamanho | evidência pronta (decisão na F06) |
-| D5 | Valores de timeout por capacidade e `num_retries` | F06 | medições + limites de 3 s / 15 s / 60 s | pending |
-| D6 | LiteLLM esconde `midstream_error` com fallback no meio do stream? | F07 | teste com `midstream_error` no primário da F2 | pending |
+| D3 | Campos de preço por token no `model_list` da versão pinada | F06 | `spend > 0` em `/key/info` | **resolvida**: `model_info.input_cost_per_token`/`output_cost_per_token` (gasto de uma classificação: US$ 0,0001325) |
+| D4 | Mini como último recurso em F1, F2, F3 (F4: não, por hipótese) | F06 | `docs/evidence/f01/models-compare/summary.md` | **resolvida (ADR 0006)**: F1, F2, F3 sim; F4 não (503) |
+| D5 | Valores de timeout por capacidade e `num_retries` | F06 | medições + limites de 3 s / 15 s / 60 s | **resolvida (ADR 0009)**: 4 s classify/extract, 30 s suggest/topics; 1 retry só para 500/503/429; sem cooldown. Timeouts do app por feature na F07 |
+| D6 | LiteLLM esconde `midstream_error` com fallback no meio do stream? | F07 | teste com `midstream_error` no primário da F2 | **resolvida: não esconde**. O gateway repassa um `data: {"error": ...}` no meio do stream; o app o converte em `event: error`. Falha antes do 1º trecho ainda faz fallback |
 | D7 | Período curto da F3 na caracterização (≤ 30 s pela borda) | F02 | tempo medido na F01 | **resolvida**: `2026-08-01`→`2026-08-01` = 137 tickets, 1 lote, 9,85 s pela borda |
 | D8 | `config.py` na main: módulo próprio vs. ponto de composição | F04/F05 | responsabilidade + métrica; ADR 0008 | **resolvida (Revisão 1 do refactoring-plan)**: dissolver `config`; nomes físicos e chaves vão para o gateway, o resto é lido em `main` e injetado |
 | D9 | Onde moram exceções de domínio sem cair na zona de dor | F05/F07 | idem | parcial: adaptadores concretos declaram a porta que implementam (`class GatewayClient(LLMGateway)`); exceções de domínio decididas na F05/F07 |
@@ -1206,6 +1206,10 @@ git clean -ndx          # revisar antes de usar -fdx; nunca apagar .env sem quer
 | R12 | Acentos em `curl -d` no Windows corrompem o corpo (400) | certo neste host | médio (falso negativo em testes/roteiros) | payloads em arquivo + `--data-binary @arq`; testes em Python (httpx) |
 | R13 | Retry do SDK cria chamadas zumbis minutos depois do 504 (observado: +5 min) | certo na v1 | alto (custo, carga) | `max_retries=0` + timeout explícito no app (F05/F06) |
 | R14 | Mensagens 422 do pydantic mudarem num rebuild da v2 (`app/requirements.txt` não fixa `pydantic`) e quebrarem a suíte idêntica | média | alto | F05 fixa `pydantic==2.14.1` e `pydantic_core==2.50.1` (versões da imagem v1) |
+| R16 | Clientes Python no Windows com `localhost:4000` ganham ~2 s por conexão (o gateway só escuta em 127.0.0.1 e o httpx tenta `::1` antes) | certo neste host | baixo (medições enganosas) | usar `127.0.0.1` em clientes Python; curl e app→gateway não são afetados |
+| R17 | Requisições em andamento no gateway continuam depois que o app reinicia (ou o cliente desiste) e poluem o `/admin/calls` de cenários seguintes | média | médio (falso negativo em roteiros) | testes de contrato por último no CI; esperar ~20 s ou reiniciar antes de roteiros de contagem |
+| R18 | `pytest` com as suítes de caracterização e de contrato juntas falhava na coleta (dois módulos `conftest`); o CI rodava separado e não detectava | ocorreu até a F07 | médio (avaliador roda `pytest` e vê erro) | `tests/contract/__init__.py`; `python -m pytest -q` verde na F08 |
+| R19 | O teste de contrato da F3 deixa o relatório do mês rodando ~5 min no app; roteiros rodados logo depois do `pytest` (ordem do README) contavam chamadas alheias e falhavam | ocorreu na 1ª validação da F09 | médio (falso vermelho para o avaliador) | `quiesce` no início de cada roteiro (PR #14); provado em clone limpo |
 | R11 | CRLF em clones Windows (`core.autocrlf=true`) quebra scripts/configs em containers | certo neste host | médio | `.gitattributes` `eol=lf` + config local (F00) |
 
 ### 8.3 Bloqueios ativos

@@ -1,0 +1,16 @@
+# Clone limpo 2 da release/final (2026-10-14T03:43:03Z)
+commit: f9700f5 Merge branch 'develop' into release/final
+CRLF no checkout: 0
+$ cp .env.example .env && docker compose up -d --build --wait
+ Container fresh-provider-fake-1 Healthy 
+$ curl localhost:8000/health → 200
+
+$ python -m pytest -q
+25 passed, 1 skipped in 76.34s (0:01:16)
+v1-coupled.csv reproduzido
+v2-decoupled.csv reproduzido
+main.csv reproduzido
+$ bash scripts/verify/governance.sh → exit=0 RESULTADO: OK (90 s)
+$ bash scripts/verify/fallback.sh → exit=0 RESULTADO: OK (90 s)
+$ bash scripts/verify/model_swap.sh → exit=0 RESULTADO: OK (46 s)
+$ bash scripts/verify/flows.sh → exit=0 RESULTADO: OK (420 s)

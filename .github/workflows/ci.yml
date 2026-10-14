@@ -41,7 +41,7 @@ jobs:
   e2e:
     name: e2e
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
 
@@ -59,9 +59,19 @@ jobs:
         if: ${{ hashFiles('tests/requirements.txt') != '' }}
         run: |
           pip install -r tests/requirements.txt
-          dirs="tests/characterization"
-          if [ -d tests/contract ]; then dirs="$dirs tests/contract"; fi
-          python -m pytest $dirs -q
+          python -m pytest tests/characterization -q
+
+      - name: Roteiros de fallback, troca de modelo e governança
+        if: ${{ hashFiles('scripts/verify/fallback.sh') != '' }}
+        run: |
+          bash scripts/verify/fallback.sh
+          bash scripts/verify/model_swap.sh
+          bash scripts/verify/governance.sh
+
+      # Por último: o pedido do mês deixa uma tarefa longa rodando no app, que poluiria o /admin/calls.
+      - name: Testes de contrato da main (fluxos)
+        if: ${{ hashFiles('tests/contract/test_flows.py') != '' }}
+        run: python -m pytest tests/contract -q
 
       - name: Logs do compose
         if: failure()

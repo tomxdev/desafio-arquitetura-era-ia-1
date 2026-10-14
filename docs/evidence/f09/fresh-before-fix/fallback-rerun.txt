@@ -1,0 +1,39 @@
+# Fallback técnico (2026-10-14T03:07:53Z)
+F1 com gpt-fake-large em error_500: status=200 total=3.435220s | /admin/calls: gpt-fake-large:500 gpt-fake-large:500 claude-fake-large:200
+  OK    F1 responde 200
+  OK    F1: até 2 tentativas em gpt-fake-large, depois sucesso em claude-fake-large
+F2 com claude-fake-large em error_500: status=200 total=18.415024s | /admin/calls: claude-fake-large:500 claude-fake-large:500 gpt-fake-large:200
+  OK    F2 responde 200
+  OK    F2: até 2 tentativas em claude-fake-large, depois sucesso em gpt-fake-large
+F3 com claude-fake-large em error_500: status=200 total=13.380s | /admin/calls: claude-fake-large:500 claude-fake-large:500 gpt-fake-large:200
+  OK    F3 responde 200
+  OK    F3: até 2 tentativas em claude-fake-large, depois sucesso em gpt-fake-large
+F4 com gpt-fake-large em error_500: status=200 total=3.432228s | /admin/calls: gpt-fake-large:500 gpt-fake-large:500 claude-fake-large:200
+  OK    F4 responde 200
+  OK    F4: até 2 tentativas em gpt-fake-large, depois sucesso em claude-fake-large
+# Sem nenhum modelo large (os dois em error_500)
+F1: status=200 total=5.072159s | corpo: {"ticket_id":"TK-00042","category":"delivery","priority":"high"} | /admin/calls: gpt-fake-large:500 gpt-fake-large:500 claude-fake-large:500 claude-fake-large:500 gpt-fake-mini:200
+  OK    F1 → 200
+  OK    F1 respondida por gpt-fake-mini
+F2: status=200 total=6.591426s | corpo: data: {"chunk": "Olá!"}
+
+data: {"chunk": " Sin"}
+
+data: {"chunk": "to m"}
+
+data: {"chunk": "uito"}
+
+data: {"chunk": " p | /admin/calls: claude-fake-large:500 claude-fake-large:500 gpt-fake-large:500 gpt-fake-large:500 claude-fake-mini:200
+  OK    F2 → 200
+  OK    F2 respondida por claude-fake-mini
+F3: status=200 total=7.908s | corpo: {"start":"2026-08-01","end":"2026-08-01","total_tickets":137,"topics":[{"topic":"Problema no rastreio","count":20,"examp | /admin/calls: claude-fake-large:500 claude-fake-large:500 gpt-fake-large:500 gpt-fake-large:500 claude-fake-mini:200
+  OK    F3 → 200
+  OK    F3 respondida por claude-fake-mini
+F4: status=503 total=5.132398s | corpo: {"detail":"Capacidade helpdesk-extract indisponível: nenhum modelo disponível (gateway respondeu 500)"} | /admin/calls: gpt-fake-large:500 gpt-fake-large:500 claude-fake-large:500 claude-fake-large:500
+  OK    F4 → 503
+  OK    F4 não usa modelo mini
+# Provider primário da F1 (openai) em timeout
+F1: status=200 total=5.104171s | /admin/calls: gpt-fake-large:504 claude-fake-large:200
+  OK    F1 responde (200 ou erro explícito) em até 15 s
+  OK    sem 504 da borda
+RESULTADO: OK

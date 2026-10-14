@@ -1,0 +1,10 @@
+# Rotação de chave (2026-10-13T17:49:16Z)
+sk-demo-rpm-0001 /key/info=200
+gateway-1  | chave demo-rpm: valor anterior revogado
+gateway-1  | chave demo-rpm: criada
+sk-demo-rpm-0001 /key/info=404
+sk-demo-rpm-0002 /key/info=200
+gateway-1  | chave demo-rpm: valor anterior revogado
+gateway-1  | chave demo-rpm: criada
+sk-demo-rpm-0002 /key/info=404
+sk-demo-rpm-0001 /key/info=200

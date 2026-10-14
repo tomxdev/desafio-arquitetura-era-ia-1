@@ -1,0 +1,60 @@
+# Evidências dos ADRs 0001, 0002, 0003 e 0005, reexecutadas em 2026-10-13T23:27:28Z
+## ADR 0001
+$ docker compose ps --format "{{.Service}} {{.Status}}" gateway gateway-db
+gateway Up 7 minutes (healthy)
+gateway-db Up 6 hours (healthy)
+
+$ grep -rE "gpt-fake|claude-fake" app/ || echo "(vazio)"
+(vazio)
+
+$ curl -s -X POST localhost:8090/admin/reset >/dev/null; curl -s -X POST localhost:8000/tickets/classification -H "Content-Type: application/json" --data-binary @scripts/diagnostics/payloads/ticket-tk-00042.json; echo; curl -s "localhost:8090/admin/calls?last=1"
+{"ticket_id":"TK-00042","category":"delivery","priority":"high"}
+[{"id":"432a5b0f01e3","ts":"2026-10-13T23:27:29.167+00:00","provider":"openai","model":"gpt-fake-large","task":"classify","stream":false,"status":200,"input_tokens":19,"output_tokens":11,"duration_ms":1077}]
+$ docker compose logs gateway 2>/dev/null | grep "POST /chat/completions" | tail -2
+gateway-1  | INFO:     172.23.0.5:52128 - "POST /chat/completions HTTP/1.1" 200 OK
+gateway-1  | INFO:     172.23.0.5:59702 - "POST /chat/completions HTTP/1.1" 200 OK
+
+## ADR 0002
+$ grep -rn "CAPABILITY =" app/helpdesk
+app/helpdesk/classification.py:8:CAPABILITY = "helpdesk-classify"
+app/helpdesk/extraction.py:9:CAPABILITY = "helpdesk-extract"
+app/helpdesk/report.py:9:CAPABILITY = "helpdesk-topics"
+app/helpdesk/suggestion.py:7:CAPABILITY = "helpdesk-suggest"
+
+$ grep -n "model_name" gateway/config.yaml
+16:  - model_name: helpdesk-classify
+19:  - model_name: helpdesk-classify-fallback
+22:  - model_name: helpdesk-classify-weak
+28:  - model_name: helpdesk-suggest
+31:  - model_name: helpdesk-suggest-fallback
+34:  - model_name: helpdesk-suggest-weak
+39:  - model_name: helpdesk-topics
+42:  - model_name: helpdesk-topics-fallback
+45:  - model_name: helpdesk-topics-weak
+50:  - model_name: helpdesk-extract
+53:  - model_name: helpdesk-extract-fallback
+
+## ADR 0003
+$ docker compose logs gateway 2>/dev/null | grep "chave helpdesk-app" | tail -2
+gateway-1  | chave helpdesk-app: já existe
+gateway-1  | chave helpdesk-app: já existe
+
+$ curl -s "127.0.0.1:4000/key/info?key=sk-helpdesk-app-0001" -H "Authorization: Bearer sk-litellm-master-0001" | python -c "import sys,json; i=json.load(sys.stdin)[\"info\"]; print({k: i[k] for k in (\"key_alias\",\"models\",\"max_budget\",\"budget_duration\",\"rpm_limit\",\"spend\")})"
+{'key_alias': 'helpdesk-app', 'models': ['helpdesk-classify', 'helpdesk-suggest', 'helpdesk-topics', 'helpdesk-extract'], 'max_budget': 100.0, 'budget_duration': '30d', 'rpm_limit': 600, 'spend': 4.258317599999999}
+
+## ADR 0005
+$ grep -E "model: (openai|anthropic)/" gateway/config.yaml | sed "s/^ *//" | sort | uniq -c
+      1 litellm_params: {model: anthropic/claude-fake-large, api_base: http://provider-fake:8090/anthropic, api_key: os.environ/FAKE_ANTHROPIC_KEY, timeout: 30, stream_timeout: 5}
+      1 litellm_params: {model: anthropic/claude-fake-large, api_base: http://provider-fake:8090/anthropic, api_key: os.environ/FAKE_ANTHROPIC_KEY, timeout: 30}
+      2 litellm_params: {model: anthropic/claude-fake-large, api_base: http://provider-fake:8090/anthropic, api_key: os.environ/FAKE_ANTHROPIC_KEY, timeout: 4}
+      1 litellm_params: {model: anthropic/claude-fake-mini, api_base: http://provider-fake:8090/anthropic, api_key: os.environ/FAKE_ANTHROPIC_KEY, timeout: 30, stream_timeout: 5}
+      1 litellm_params: {model: anthropic/claude-fake-mini, api_base: http://provider-fake:8090/anthropic, api_key: os.environ/FAKE_ANTHROPIC_KEY, timeout: 30}
+      1 litellm_params: {model: openai/gpt-fake-large, api_base: http://provider-fake:8090/openai/v1, api_key: os.environ/FAKE_OPENAI_KEY, timeout: 30, stream_timeout: 5}
+      1 litellm_params: {model: openai/gpt-fake-large, api_base: http://provider-fake:8090/openai/v1, api_key: os.environ/FAKE_OPENAI_KEY, timeout: 30}
+      2 litellm_params: {model: openai/gpt-fake-large, api_base: http://provider-fake:8090/openai/v1, api_key: os.environ/FAKE_OPENAI_KEY, timeout: 4}
+      1 litellm_params: {model: openai/gpt-fake-mini, api_base: http://provider-fake:8090/openai/v1, api_key: os.environ/FAKE_OPENAI_KEY, timeout: 4}
+
+$ grep -cE "model: (openai|anthropic)/" gateway/config.yaml; grep -E "model: " gateway/config.yaml | grep -vcE "model: (openai|anthropic)/"
+11
+0
+

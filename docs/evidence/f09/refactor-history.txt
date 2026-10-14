@@ -1,0 +1,29 @@
+$ git log --oneline --no-merges v1-coupled..HEAD -- app/
+fbd36ee feat(flows): F2 em SSE, F3 em Asynchronous Request-Reply e timeouts por feature
+f16fad3 feat(app): falha explícita 503 quando a capacidade fica sem destino
+ec1a935 refactor(app): dissolve config e llm
+fcd8b71 refactor(adapters): GatewayClient substitui ProviderGateway
+a72685f refactor(report): injeta portas LLMGateway e TicketSource
+ff6941e refactor(extraction): injeta porta LLMGateway
+7883f87 refactor(suggestion): injeta porta LLMGateway
+51f1315 refactor(classification): injeta porta LLMGateway (piloto)
+
+$ git diff --stat v1-coupled HEAD -- app/
+ app/helpdesk/adapters/__init__.py |  0
+ app/helpdesk/adapters/gateway.py  | 78 +++++++++++++++++++++++++++++++++++
+ app/helpdesk/classification.py    | 11 +++--
+ app/helpdesk/config.py            | 18 ---------
+ app/helpdesk/extraction.py        | 10 +++--
+ app/helpdesk/llm.py               | 30 --------------
+ app/helpdesk/main.py              | 85 ++++++++++++++++++++++++++++++++++-----
+ app/helpdesk/ports.py             | 29 +++++++++++++
+ app/helpdesk/report.py            | 24 ++++++++---
+ app/helpdesk/report_jobs.py       | 64 +++++++++++++++++++++++++++++
+ app/helpdesk/suggestion.py        | 37 ++++++++++++++---
+ app/helpdesk/tickets.py           | 30 ++++++++------
+ app/requirements.txt              |  4 +-
+ 13 files changed, 330 insertions(+), 90 deletions(-)
+
+$ grep -n "^FROM" app/Dockerfile; grep -n fastapi app/requirements.txt
+1:FROM python:3.12-slim
+1:fastapi==0.115.6

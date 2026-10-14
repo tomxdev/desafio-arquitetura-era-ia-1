@@ -1,0 +1,3 @@
+# Dois providers inteiros em error_500 (2026-10-13T17:51:36Z)
+F1: status=503 total=7.333141s corpo={"detail":"Capacidade helpdesk-classify indisponível: nenhum modelo disponível (gateway respondeu 500)"}
+/admin/calls: gpt-fake-large:500 gpt-fake-large:500 claude-fake-large:500 claude-fake-large:500 gpt-fake-mini:500 gpt-fake-mini:500

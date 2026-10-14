@@ -7,3 +7,5 @@ __pycache__/
 .venv/
 *.egg-info/
 metrics/.cache/
+scripts/verify/.last-body
+scripts/verify/.last-body.*

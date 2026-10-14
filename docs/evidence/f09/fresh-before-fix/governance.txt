@@ -1,0 +1,23 @@
+# Governança (2026-10-14T02:57:07Z)
+## Orçamento: chave demo-budget (max_budget US$ 0,0001; uma classificação custa ~US$ 0,00013)
+gasto atual da chave: US$ 0.0
+orçamento, 1ª requisição (dentro do orçamento): status=200 | /admin/calls 0 -> 1 | {"id":"chatcmpl-db30c0f6ffae43bdabbd4080","created":1791946628,"model":"helpdesk-classify","object":"chat.completion","choices":[{"finish_reason":"sto
+  OK    orçamento, 1ª requisição (dentro do orçamento) → 200
+  OK    orçamento, 1ª requisição (dentro do orçamento) chegou ao provider (+1 chamada)
+orçamento, requisição após estourar: status=429 | /admin/calls 1 -> 1 | {"error":{"message":"Budget has been exceeded! Key=demo-budget (sk-...0001) Current cost: 0.00013249999999998896, Max budget: 0.0001","type":"budget_e
+  OK    orçamento, requisição após estourar → 429
+  OK    orçamento, requisição após estourar NÃO chegou ao provider (contador igual)
+  OK    motivo: budget_exceeded
+## Limite de requisições: chave demo-rpm (2 por minuto)
+(aguardando a janela de 1 minuto zerar, para o roteiro ser repetível)
+limite, 1ª requisição: status=200 | /admin/calls 7 -> 9 | {"id":"chatcmpl-f05caf751b9c44339ab09d74","created":1791946691,"model":"helpdesk-classify","object":"chat.completion","choices":[{"finish_reason":"sto
+  OK    limite, 1ª requisição → 200
+  FALHA limite, 1ª requisição chegou ao provider (+1 chamada)
+limite, 2ª requisição: status=200 | /admin/calls 9 -> 10 | {"id":"chatcmpl-23af78cc850c400281761917","created":1791946693,"model":"helpdesk-classify","object":"chat.completion","choices":[{"finish_reason":"sto
+  OK    limite, 2ª requisição → 200
+  OK    limite, 2ª requisição chegou ao provider (+1 chamada)
+limite, 3ª requisição no mesmo minuto: status=429 | /admin/calls 10 -> 10 | {"error":{"message":"Rate limit exceeded for api_key: ca2cb264dc8baa348f888a350f002f8481c4d880a5361ad4ecef728cb8f28b13. Limit type: requests. Current 
+  OK    limite, 3ª requisição no mesmo minuto → 429
+  OK    limite, 3ª requisição no mesmo minuto NÃO chegou ao provider (contador igual)
+  OK    motivo: rate limit
+RESULTADO: 1 falha(s)
