@@ -1,0 +1,7 @@
+# Revisão do PR #15: pytest completo e, logo depois, os roteiros (2026-10-14T04:12:33Z)
+$ python -m pytest -q
+26 passed, 1 skipped in 82.14s (0:01:22)
+$ bash scripts/verify/governance.sh → exit=0 RESULTADO: OK (88 s)
+$ bash scripts/verify/fallback.sh → exit=0 RESULTADO: OK (90 s)
+$ bash scripts/verify/model_swap.sh → exit=0 RESULTADO: OK (46 s)
+$ bash scripts/verify/flows.sh → exit=0 RESULTADO: OK (421 s)
