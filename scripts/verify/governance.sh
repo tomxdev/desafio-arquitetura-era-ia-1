@@ -2,6 +2,7 @@
 # Roteiro de governança (README): recusa por orçamento e por limite de requisições, ANTES do provider.
 # Usa as chaves de demonstração do .env.example direto no gateway (localhost:4000).
 source "$(dirname "$0")/_lib.sh"
+quiesce
 BUDGET_KEY=${GATEWAY_DEMO_BUDGET_KEY:-sk-demo-budget-0001}
 RPM_KEY=${GATEWAY_DEMO_RPM_KEY:-sk-demo-rpm-0001}
 BODY='{"model": "helpdesk-classify", "messages": [{"role": "user", "content": "TASK: classify\nMeu pedido atrasou"}]}'
