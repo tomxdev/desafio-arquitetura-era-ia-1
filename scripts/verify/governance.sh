@@ -29,6 +29,7 @@ reset_provider
 
 echo "## Orçamento: chave demo-budget (max_budget US\$ 0,0001; uma classificação custa ~US\$ 0,00013)"
 spend=$(curl -s "$GATEWAY/key/info?key=$BUDGET_KEY" -H "Authorization: Bearer ${LITELLM_MASTER_KEY:-sk-litellm-master-0001}" | python -c "import sys,json;print(json.load(sys.stdin)['info']['spend'])")
+[ -n "$spend" ] || { echo "não foi possível ler o gasto da chave demo-budget em /key/info" >&2; exit 1; }
 echo "gasto atual da chave: US\$ $spend"
 if python -c "import sys; sys.exit(0 if float('$spend') < 0.0001 else 1)"; then
   attempt "orçamento, 1ª requisição (dentro do orçamento)" "$BUDGET_KEY" 200

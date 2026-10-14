@@ -26,6 +26,10 @@ def _events(ticket_id: str, chunks: Iterator[str]) -> Iterator[str]:
     except CapabilityUnavailable:
         yield _event({"ticket_id": ticket_id, "message": INTERRUPTED}, name="error")
         return
+    finally:
+        close = getattr(chunks, "close", None)  # cliente desistiu: libera o stream do gateway
+        if close is not None:
+            close()
     yield _event({"ticket_id": ticket_id}, name="end")
 
 

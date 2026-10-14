@@ -15,7 +15,7 @@ BODY_FILE=scripts/verify/.last-body
 
 reset_provider() { curl -s -X POST "$PROVIDER/admin/reset" >/dev/null; }
 set_failure() { curl -s -X POST "$PROVIDER/admin/failures" -H 'Content-Type: application/json' -d "$1" >/dev/null; }
-call_count() { curl -s "$PROVIDER/admin/calls?last=5000" | python -c "import sys,json;print(len(json.load(sys.stdin)))"; }
+call_count() { curl -sf "$PROVIDER/admin/calls?last=5000" | python -c "import sys,json;print(len(json.load(sys.stdin)))"; }
 
 # Imprime as chamadas registradas pelo provider (mais antiga primeiro).
 show_calls() {
@@ -51,6 +51,7 @@ feature() {
       fi
       grep -q '"state":"failed"' "$BODY_FILE" && { status=failed; break; }
       [ "$status" != 200 ] && break
+      if python -c "import sys,time; sys.exit(0 if time.time() - $started > 900 else 1)"; then status=timeout; break; fi
       sleep 1
     done
     total=$(python -c "import time; print(f'{time.time() - $started:.3f}')")
@@ -66,9 +67,9 @@ feature() {
 quiesce() {
   local before after stable=0
   docker compose restart app >/dev/null 2>&1; docker compose up -d --wait app >/dev/null 2>&1
-  before=$(call_count)
+  before=$(call_count) || { echo "quiesce: /admin/calls inacessível" >&2; exit 1; }
   while [ "$stable" -lt 15 ]; do
-    sleep 3; after=$(call_count)
+    sleep 3; after=$(call_count) || { echo "quiesce: /admin/calls inacessível" >&2; exit 1; }
     if [ "$after" = "$before" ]; then stable=$((stable + 3)); else stable=0; before=$after; fi
   done
 }

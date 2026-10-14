@@ -27,6 +27,13 @@ read -r status _ < <(feature /tickets/classification ticket-tk-00042.json)
 echo "antes: F1 status=$status | /admin/calls: $(call_models 1) | app iniciado em $before_start"
 
 echo "## 1) editar $CONFIG (helpdesk-classify: openai/gpt-fake-large → openai/gpt-fake-mini)"
+restore() { # interrupção no meio: volta o arquivo e o gateway ao estado versionado
+  if ! git diff --quiet -- "$CONFIG"; then
+    git checkout -- "$CONFIG"; docker compose restart gateway >/dev/null 2>&1; wait_gateway
+  fi
+}
+trap restore EXIT
+trap 'exit 130' INT TERM   # sinal também passa pelo restore
 swap openai/gpt-fake-large openai/gpt-fake-mini
 git diff --unified=0 -- "$CONFIG" | grep -E '^[-+] ' | sed 's/^/    /'
 echo "## 2) docker compose restart gateway"

@@ -73,6 +73,8 @@ def main() -> None:
         status, body = request("POST", "/key/delete", {"key_aliases": [spec["key_alias"]]})
         if status == 200:
             print(f"chave {spec['key_alias']}: valor anterior revogado", flush=True)
+        elif status != 404:  # 404: nenhuma chave com esse alias
+            sys.exit(f"falha ao revogar o valor anterior de {spec['key_alias']}: {status} {body}")
         status, body = request("POST", "/key/generate", spec)
         if status != 200 or body.get("key") != spec["key"]:
             sys.exit(f"falha ao criar a chave {spec['key_alias']}: {status} {body}")
