@@ -5,6 +5,7 @@
 # 2) os dois modelos large em error_500 → cada feature como declarado na Tabela de fallback;
 # 3) provider primário da F1 em timeout → resposta em até 15 s.
 source "$(dirname "$0")/_lib.sh"
+quiesce
 
 primary_down() { # feature rota payload modelo_primário provider_primário modelo_fallback
   reset_provider

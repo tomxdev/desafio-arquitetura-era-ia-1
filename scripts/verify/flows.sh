@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Fluxos da main (README, "Fluxos"), medidos pela borda (localhost:8000), com os cenários de falha
-# dos critérios. Leva ~7 min (o relatório do mês inteiro roda até o fim). Reinicia o app no início
-# para não haver tarefas de relatório de execuções anteriores poluindo o /admin/calls.
+# dos critérios. Leva ~7 min (o relatório do mês inteiro roda até o fim). Começa de um stack quieto
+# (quiesce, em _lib.sh) para não haver tarefas de relatório anteriores poluindo o /admin/calls.
 source "$(dirname "$0")/_lib.sh"
 STATUSES=""
 note_status() { STATUSES="$STATUSES $1"; }
@@ -9,7 +9,7 @@ now() { date +%s.%N; }
 elapsed() { python -c "print(f'{$2 - $1:.2f}')"; }
 
 echo "# Fluxos pela borda ($(date -u +%FT%TZ))"
-docker compose restart app >/dev/null 2>&1; docker compose up -d --wait app >/dev/null 2>&1
+quiesce
 reset_provider
 
 echo "## F1 síncrono (5 execuções; limite 3 s)"
@@ -83,7 +83,7 @@ grep -q '"state":"failed"' "$BODY_FILE" && grep -q '"reason"' "$BODY_FILE"; chec
 check "F3 failed em até 60 s" "$(python -c "import sys; sys.exit(0 if float('$(cat "$BODY_FILE.t")') <= 60 else 1)" && echo 0 || echo 1)"
 
 echo "## F3 mês inteiro (2026-08-01 a 2026-08-31), modo normal"
-docker compose restart app >/dev/null 2>&1; docker compose up -d --wait app >/dev/null 2>&1
+quiesce
 reset_provider
 t0=$(now)
 code=$(curl -s -D "$BODY_FILE.h" -o "$BODY_FILE" -w '%{http_code}' -X POST "$EDGE/reports/topics" \

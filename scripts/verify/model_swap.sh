@@ -6,6 +6,7 @@ source "$(dirname "$0")/_lib.sh"
 CONFIG=gateway/config.yaml
 
 if ! git diff --quiet -- "$CONFIG"; then echo "$CONFIG tem alterações locais; faça commit ou stash antes." >&2; exit 1; fi
+quiesce
 app_started() { docker inspect -f '{{.State.StartedAt}}' "$(docker compose ps -q app)"; }
 wait_gateway() { docker compose up -d --wait gateway >/dev/null 2>&1; }
 swap() { # de para (só a 1ª linha de helpdesk-classify)

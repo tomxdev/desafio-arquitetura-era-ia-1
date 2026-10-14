@@ -93,6 +93,8 @@ def test_f2_midstream_failure_arrives_as_error_event(edge, fail):
 # F3 ------------------------------------------------------------------------------------------
 
 def test_f3_month_request_accepted_within_1s(edge):
+    # A tarefa do mês segue rodando (~5 min) depois do teste; os roteiros de scripts/verify começam
+    # com quiesce (reinicia o app) para que ela não entre no /admin/calls deles.
     response, elapsed = timed_post(edge, "/reports/topics", MONTH)
     assert response.status_code == 202
     assert response.headers["location"].startswith("/reports/topics/status/")

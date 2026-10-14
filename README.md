@@ -181,7 +181,7 @@ Testes dos contratos da main (tempos pela borda e cenários de falha; ~40 s; o d
 python -m pytest tests/contract -q
 ```
 
-Roteiros de verificação (conferem sozinhos o `/admin/calls` e saem com erro se algo divergir):
+Roteiros de verificação (conferem sozinhos o `/admin/calls` e saem com erro se algo divergir; cada um começa reiniciando o `app` e esperando o `/admin/calls` ficar 15 s parado, para descartar tarefas de relatório deixadas por execuções anteriores, como o teste de contrato da F3):
 
 ```bash
 bash scripts/verify/flows.sh        # fluxos F1–F4 pela borda, inclusive o mês inteiro (~7 min)
